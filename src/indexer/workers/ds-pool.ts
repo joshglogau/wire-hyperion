@@ -10,7 +10,7 @@ import { RabbitQueueDef } from "../definitions/index-queues.js";
 import { ActionTrace } from "../../interfaces/action-trace.js";
 import { HyperionWorker } from "./hyperionWorker.js";
 import { HyperionActionAct } from "../../interfaces/hyperion-action.js";
-import { ABI, Action } from "@wireio/sdk-core";
+import { ABI, Action } from "../../wire/SdkCore.js";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 import { groupActionTraces } from "../helpers/action-dedup.js";
@@ -262,7 +262,7 @@ export default class DSPoolWorker extends HyperionWorker {
                             return entry.startingBlock < block_num && entry.endingBlock > block_num;
                         });
                         if (matchingAbi && matchingAbi.abi) {
-                            _status = this.abieos.loadAbi(contract, matchingAbi.abi);
+                            _status = this.codec.loadAbi(contract, matchingAbi.abi);
                         }
                     }
                 }
@@ -521,7 +521,7 @@ export default class DSPoolWorker extends HyperionWorker {
 
     deleteCache(contract: string) {
         // delete cache contract on abieos context
-        const status = this.abieos.deleteContract(contract);
+        const status = this.codec.deleteContract(contract);
         if (!status) {
             debugLog('Contract not found on cache!');
         } else {
@@ -565,7 +565,7 @@ export default class DSPoolWorker extends HyperionWorker {
 
     initializeShipAbi(abiString: string) {
         this.shipABI = ABI.from(abiString);
-        this.abieos.loadAbi("0", abiString);
+        this.codec.loadAbi("0", abiString);
         this.startMonitoring();
     }
 

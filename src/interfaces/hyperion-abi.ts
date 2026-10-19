@@ -1,4 +1,4 @@
-import {ABI} from "@wireio/sdk-core";
+import {ABI} from "../wire/SdkCore.js";
 
 export interface HyperionAbi {
     valid_until: number | null;

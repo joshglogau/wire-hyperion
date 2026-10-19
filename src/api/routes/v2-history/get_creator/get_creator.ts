@@ -1,6 +1,6 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from "fastify";
 import {timedQuery} from "../../../helpers/functions.js";
-import {API} from "@wireio/sdk-core";
+import {API} from "../../../../wire/SdkCore.js";
 
 async function getCreator(fastify: FastifyInstance, request: FastifyRequest) {
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ABI } from "@wireio/sdk-core";
+import { ABI } from "../../src/wire/SdkCore.js";
 import { historicalAbiAtBlock } from "../../src/wire/HistoricalAbi.js";
 import { WireSerializer } from "../../src/wire/WireSerializer.js";
 import type { HyperionAbi } from "../../src/interfaces/hyperion-abi.js";

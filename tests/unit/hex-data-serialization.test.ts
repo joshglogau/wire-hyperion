@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import { ABI, Serializer } from '@wireio/sdk-core';
+import { ABI, Serializer } from '../../src/wire/SdkCore.js';
 
 // Minimal eosio.token ABI — just the transfer action
 const EOSIO_TOKEN_ABI = ABI.from({

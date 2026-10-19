@@ -50,7 +50,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 7 | Complete | Preserve full raw KV key/value/table identity; hash full namespace/fork/deletion identity into bounded document IDs. Decode values only with proven historical ABIs, retain deletions and ignore secondary-index bookkeeping as duplicate business rows. No guessed scope/composite projection or generic current-state KV service. |
 | 8 | Complete | Select the Wire parser/system contract, isolate queues/indices/cache/databases by lossless chain-derived namespace, reject mismatched RPC identity, retain bounded history and return explicit HTTP 410 for retired state/statistics/proxy capabilities. |
 | 9 | Bounded | Replace legacy action enrichers, DSP console-event parser, state-route bodies and unsupported synchronizers with explicit deprecation stubs. Preserve account/multisig table handling and unproven backend consumers; broader table removal/startup feature rejection was not accepted by safety review and is deferred for explicit owner review. |
-| 10 | Planned | Remove replaced codecs and integrations only after retained callers pass. |
+| 10 | In progress | Use one public SDK CommonJS interop seam for Node 24, replace the manual native diagnostic with an executable SDK probe and prove no retained source/test import needs native ABI or WharfKit. Optional backend removals remain deferred where consumers are unproven. |
 | 11 | Planned | Expose truthful coverage, lag and indexing failures through compatible health fields. |
 | 12 | Planned | Record reproducible validation and operational/release gates. |
 
@@ -63,6 +63,20 @@ and does not publish or deploy. Contributor guidance is intentionally scoped to
 the compatibility work, not a rewrite of upstream conventions.
 
 ## Historical ABI boundary
+
+### SDK package interoperability
+
+The installed SDK Core 1.0.102 ESM entry fails under Node 24 because its graph
+uses a named `elliptic` CommonJS import. Its published CommonJS entry loads
+correctly. `src/wire/SdkCore.ts` uses that public require condition and exports
+only the consumed public symbols/types; no private package paths, copied SDK
+implementation, patched dependency files or SDK source changes are used. Keep
+runtime and declaration types on the same entry-point graph. The compiled Node
+diagnostic `node tests/ds-test.js` complements Bun's unit tests, which did not
+expose the Node ESM failure. A future SDK release can remove this interop seam
+after its public ESM entry passes the same runtime checks.
+
+### ABI validity
 
 The upstream ABI scan stores final ABI snapshots per block. It cannot prove the
 ABI of each action within a block that changes that contract's ABI. This draft

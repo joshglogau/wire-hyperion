@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ABI, ABIDecoder, ABIEncoder, Bytes, KeyType, Signature } from "@wireio/sdk-core";
+import { ABI, ABIDecoder, ABIEncoder, Bytes, KeyType, Signature } from "../../src/wire/SdkCore.js";
 import { WireSignature } from "../../src/wire/WireSignature.js";
 import { WireBitset } from "../../src/wire/WireBitset.js";
 import { WireSerializer } from "../../src/wire/WireSerializer.js";

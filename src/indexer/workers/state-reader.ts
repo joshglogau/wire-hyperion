@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import {cargo, QueueObject} from 'async';
 import {Channel, ConfirmChannel} from 'amqplib';
-import {ABI, API, Bytes, Checksum256, UInt32} from '@wireio/sdk-core';
+import {ABI, API, Bytes, Checksum256, UInt32} from '../../wire/SdkCore.js';
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { assertShipChainId, selectShipRevision, ShipRevision } from "../../wire/WireShip.js";
 
@@ -763,7 +763,7 @@ export default class StateReader extends HyperionWorker {
 
     private processFirstABI(data: Buffer) {
         const abiString = data.toString();
-        this.abieos.loadAbi('0', abiString);
+        this.codec.loadAbi('0', abiString);
         this.shipABI = ABI.from(abiString);
         this.shipRev = selectShipRevision(this.shipABI, this.conf.settings.ship_request_rev);
         if (this.shipRev === ShipRevision.v1) this.baseRequest.fetch_finality_data = true;

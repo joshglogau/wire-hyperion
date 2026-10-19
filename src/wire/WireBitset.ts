@@ -1,4 +1,4 @@
-import { ABIDecoder, ABIEncoder, Bytes, type BytesType } from "@wireio/sdk-core";
+import { ABIDecoder, ABIEncoder, Bytes, type BytesType } from "./SdkCore.js";
 
 const BITS_PER_BYTE = 8;
 const MAX_VARUINT32 = 0xffffffff;

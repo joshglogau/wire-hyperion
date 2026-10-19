@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey } from "@wireio/sdk-core";
+import { PrivateKey, PublicKey } from "../../wire/SdkCore.js";
 import { io, Socket as SocketIO } from "socket.io-client";
 import { hLog } from "../../indexer/helpers/common_functions.js";
 

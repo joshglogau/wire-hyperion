@@ -1,5 +1,5 @@
 import fp from "fastify-plugin";
-import {APIClient} from "@wireio/sdk-core";
+import {APIClient} from "../../wire/SdkCore.js";
 import {FastifyInstance, FastifyPluginOptions} from "fastify";
 import {ConnectionManager} from "../../indexer/connections/manager.class.js";
 import {hLog} from "../../indexer/helpers/common_functions.js";

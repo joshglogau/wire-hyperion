@@ -13,7 +13,7 @@ import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 import { TransactionTrace } from "../../interfaces/action-trace.js";
 import { HyperionSignedBlock, ProducerSchedule } from "../../interfaces/signed-block.js";
 import { estypes } from "@elastic/elasticsearch";
-import { ABI, Action, PackedTransaction } from "@wireio/sdk-core";
+import { ABI, Action, PackedTransaction } from "../../wire/SdkCore.js";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { receiptCpuUsage, unpackReceiptTransaction } from "../../wire/WireShip.js";
 import { historicalAbiAtBlock } from "../../wire/HistoricalAbi.js";
@@ -136,14 +136,14 @@ export default class MainDSWorker extends HyperionWorker {
         switch (msg.event) {
             case 'initialize_abi': {
                 this.shipABI = ABI.from(msg.data);
-                this.abieos.loadAbi("0", msg.data);
+                this.codec.loadAbi("0", msg.data);
                 this.initConsumer();
                 break;
             }
             case 'update_abi': {
                 if (msg.shipABI) {
                     if (msg.shipABI.abi_hex) {
-                        this.abieos.loadAbiHex(msg.shipABI.account, msg.shipABI.abi_hex);
+                        this.codec.loadAbiHex(msg.shipABI.account, msg.shipABI.abi_hex);
                         hLog(`Worker ${process.env.worker_id} updated the abi for ${msg.shipABI.account}`);
                     }
                 }
@@ -776,9 +776,9 @@ export default class MainDSWorker extends HyperionWorker {
             let result: string;
             try {
                 if (typeof row.value === 'string') {
-                    result = this.abieos.hexToJson(row['code'], tableType, row.value);
+                    result = this.codec.hexToJson(row['code'], tableType, row.value);
                 } else {
-                    result = this.abieos.binToJson(row['code'], tableType, row.value);
+                    result = this.codec.binToJson(row['code'], tableType, row.value);
                 }
                 row['data'] = result;
                 delete row.value;
@@ -853,7 +853,7 @@ export default class MainDSWorker extends HyperionWorker {
     //     if (check_action) {
     //         if (actions.has(check_action)) {
     //             try {
-    //                 this.abieos.loadAbi(accountName, JSON.stringify(abi));
+    //                 this.codec.loadAbi(accountName, JSON.stringify(abi));
     //             } catch (e) {
     //                 hLog(e);
     //             }
@@ -1303,7 +1303,7 @@ export default class MainDSWorker extends HyperionWorker {
                         // update locally cached abi
                         if (process.env['live_mode'] === 'true') {
                             hLog('Abi changed during live mode, updating local version...');
-                            const abi_update_status = this.abieos.loadAbiHex(account['name'], abiHex);
+                            const abi_update_status = this.codec.loadAbiHex(account['name'], abiHex);
                             if (!abi_update_status) {
                                 hLog(`Reload status: ${abi_update_status}`);
                             }
@@ -1600,9 +1600,9 @@ export default class MainDSWorker extends HyperionWorker {
         if (this.shipABI) {
             try {
                 if (typeof array === 'string') {
-                    return this.abieos.hexToJson("0", datatype, array);
+                    return this.codec.hexToJson("0", datatype, array);
                 } else {
-                    return this.abieos.binToJson("0", datatype, array);
+                    return this.codec.binToJson("0", datatype, array);
                 }
             } catch (e: any) {
                 hLog('deserializeNative >>', datatype, '>>', e.message);
@@ -1622,7 +1622,7 @@ export default class MainDSWorker extends HyperionWorker {
 
         if (status && actionType) {
             try {
-                return this.abieos.binToJson(
+                return this.codec.binToJson(
                     action.account.toString(),
                     actionType,
                     Buffer.from(action.data.hexString, 'hex')

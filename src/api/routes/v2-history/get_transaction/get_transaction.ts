@@ -3,7 +3,7 @@ import {mergeActionMeta, timedQuery} from "../../../helpers/functions.js";
 import {resolveHotIndices} from "../../../helpers/hot-index.js";
 import {hLog} from "../../../../indexer/helpers/common_functions.js";
 import {regroupActions} from "../../../helpers/regroup-actions.js";
-import {API} from "@wireio/sdk-core";
+import {API} from "../../../../wire/SdkCore.js";
 
 async function getTransaction(fastify: FastifyInstance, request: FastifyRequest) {
     const redis = fastify.redis;

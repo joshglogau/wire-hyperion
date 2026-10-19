@@ -1,4 +1,4 @@
-import { ABI, PackedTransaction, type PackedTransactionType } from "@wireio/sdk-core";
+import { ABI, PackedTransaction, type PackedTransactionType } from "./SdkCore.js";
 
 /** Request versions are negotiated from the advertised ABI, not node semver. */
 export enum ShipRevision {

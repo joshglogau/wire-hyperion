@@ -1,4 +1,4 @@
-import {Asset, Struct} from "@wireio/sdk-core";
+import {Asset, Struct} from "../wire/SdkCore.js";
 
 @Struct.type("accounts")
 export class TokenAccount extends Struct {

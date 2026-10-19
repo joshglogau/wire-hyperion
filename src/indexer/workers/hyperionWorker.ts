@@ -12,7 +12,7 @@ import { StateHistorySocket } from "../connections/state-history.js";
 import { BasicDelta } from "../../interfaces/hyperion-delta.js";
 import { getHeapStatistics, HeapInfo } from "node:v8";
 import { HyperionActionAct } from "../../interfaces/hyperion-action.js";
-import { Action, APIClient } from "@wireio/sdk-core";
+import { Action, APIClient } from "../../wire/SdkCore.js";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 
 export abstract class HyperionWorker {
@@ -39,7 +39,7 @@ export abstract class HyperionWorker {
     filters: Filters;
 
     failedAbiMap: Map<string, Set<number>> = new Map();
-    protected abieos = new WireCodec();
+    protected codec = new WireCodec();
     configModule: ConfigurationModule;
 
     protected constructor() {
@@ -267,7 +267,7 @@ export abstract class HyperionWorker {
             _status = false;
             debugLog('ignore saved abi for', contract, block_num);
         } else {
-            _status = this.abieos.loadAbiHex(contract, abi_hex);
+            _status = this.codec.loadAbiHex(contract, abi_hex);
             if (!_status) {
                 hLog(`Abieos::loadAbiHex error for ${contract} at ${block_num}`);
                 if (this.failedAbiMap.has(contract)) {
@@ -294,11 +294,11 @@ export abstract class HyperionWorker {
         try {
             switch (field) {
                 case "action": {
-                    dataType = this.abieos.getTypeForAction(contract, type);
+                    dataType = this.codec.getTypeForAction(contract, type);
                     break;
                 }
                 case "table": {
-                    dataType = this.abieos.getTypeForTable(contract, type);
+                    dataType = this.codec.getTypeForTable(contract, type);
                     break;
                 }
             }
@@ -320,7 +320,7 @@ export abstract class HyperionWorker {
                 const abi_hex = Buffer.from(currentAbi.abi.array).toString('hex');
                 
                 try {
-                    _status = this.abieos.loadAbiHex(contract, abi_hex);
+                    _status = this.codec.loadAbiHex(contract, abi_hex);
                 } catch (e: any) {
                     debugLog(`(abieos/current) >> ${e.message}`);
                 }

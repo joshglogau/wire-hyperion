@@ -1,4 +1,4 @@
-import { ABI } from "@wireio/sdk-core";
+import { ABI } from "./SdkCore.js";
 import type { HyperionAbi } from "../interfaces/hyperion-abi.js";
 import { WireSerializer } from "./WireSerializer.js";
 

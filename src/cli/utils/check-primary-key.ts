@@ -1,4 +1,4 @@
-import {ABI, APIClient, Asset, Name, UInt64} from '@wireio/sdk-core';
+import {ABI, APIClient, Asset, Name, UInt64} from '../../wire/SdkCore.js';
 import {createHash} from "node:crypto"
 
 

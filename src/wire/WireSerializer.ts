@@ -1,4 +1,4 @@
-import { ABIDecoder, Bytes, Serializer, type ABISerializable, type ABISerializableConstructor } from "@wireio/sdk-core";
+import { ABIDecoder, Bytes, Serializer, type ABISerializable, type ABISerializableConstructor } from "./SdkCore.js";
 import { WireBitset } from "./WireBitset.js";
 import { WireSignature } from "./WireSignature.js";
 

@@ -1,5 +1,5 @@
 import { Client } from '@elastic/elasticsearch';
-import { APIClient } from "@wireio/sdk-core";
+import { APIClient } from "../../wire/SdkCore.js";
 // @ts-ignore
 import cliProgress from 'cli-progress';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';

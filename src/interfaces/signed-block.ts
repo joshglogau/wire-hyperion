@@ -15,7 +15,7 @@ interface Extension {
 
 export interface TransactionReceipt {
     cpu_usage_us: number[];
-    trx: import("@wireio/sdk-core").PackedTransactionType;
+    trx: import("../wire/SdkCore.js").PackedTransactionType;
 }
 
 export interface HyperionSignedBlock {

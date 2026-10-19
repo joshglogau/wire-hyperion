@@ -9,7 +9,7 @@ import {hLog} from "../helpers/common_functions.js";
 import {join} from "node:path";
 import {existsSync, readFileSync} from "fs";
 import {MongoClient} from "mongodb";
-import {APIClient} from "@wireio/sdk-core";
+import {APIClient} from "../../wire/SdkCore.js";
 
 export class ConnectionManager {
 

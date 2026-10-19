@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ABI, ABIDecoder, APIClient, BlockTimestamp, Serializer, UInt64 } from "@wireio/sdk-core";
+import { ABI, ABIDecoder, APIClient, BlockTimestamp, Serializer, UInt64 } from "../../src/wire/SdkCore.js";
 
 /** Exercise the installed public SDK, not sibling checkout or private exports. */
 describe("Wire SDK package boundary", () => {

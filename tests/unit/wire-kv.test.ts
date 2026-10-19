@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ABI } from "@wireio/sdk-core";
+import { ABI } from "../../src/wire/SdkCore.js";
 import { decodeWireKvRow, deltaDocumentId } from "../../src/wire/WireKv.js";
 import type { HyperionDelta } from "../../src/interfaces/hyperion-delta.js";
 

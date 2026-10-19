@@ -1,6 +1,6 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from "fastify";
 import {mergeActionMeta, timedQuery} from "../../../helpers/functions.js";
-import {API} from "@wireio/sdk-core";
+import {API} from "../../../../wire/SdkCore.js";
 import {regroupActions} from "../../../helpers/regroup-actions.js";
 
 

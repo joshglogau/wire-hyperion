@@ -1,4 +1,4 @@
-import { ABI, type ABIDef, type BytesType, type ABISerializable } from "@wireio/sdk-core";
+import { ABI, type ABIDef, type BytesType, type ABISerializable } from "./SdkCore.js";
 import { WireSerializer } from "./WireSerializer.js";
 
 /** Per-worker ABI context backed only by the public Wire SDK serializer. */

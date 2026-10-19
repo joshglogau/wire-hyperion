@@ -1,4 +1,4 @@
-import { Name, PublicKey } from "@wireio/sdk-core";
+import { Name, PublicKey } from "../../wire/SdkCore.js";
 import { cargo } from "async";
 import { Collection } from "mongodb";
 import { IPermission } from "../../interfaces/table-permissions.js";

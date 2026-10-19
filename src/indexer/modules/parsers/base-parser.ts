@@ -7,7 +7,7 @@ import { TrxMetadata } from "../../../interfaces/trx-metadata.js";
 import { ActionTrace } from "../../../interfaces/action-trace.js";
 import { debugLog, hLog } from "../../helpers/common_functions.js";
 import { HyperionActionAct } from "../../../interfaces/hyperion-action.js";
-import { Action } from "@wireio/sdk-core";
+import { Action } from "../../../wire/SdkCore.js";
 
 export abstract class BaseParser {
 

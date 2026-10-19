@@ -1,5 +1,5 @@
 import {Client} from "@elastic/elasticsearch";
-import {APIClient} from "@wireio/sdk-core";
+import {APIClient} from "../../wire/SdkCore.js";
 import {readFileSync} from "fs";
 import {Collection, MongoClient, Document as MongoDoc} from "mongodb";
 import {join} from "path";

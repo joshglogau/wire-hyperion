@@ -2,7 +2,7 @@ import {FastifyInstance, FastifyReply, FastifyRequest} from "fastify";
 import {timedQuery} from "../../../helpers/functions.js";
 import {getSkipLimit} from "../../v2-history/get_actions/functions.js";
 import {hLog} from "../../../../indexer/helpers/common_functions.js";
-import {PublicKey} from "@wireio/sdk-core";
+import {PublicKey} from "../../../../wire/SdkCore.js";
 import {request as undiciRequest} from "undici";
 
 

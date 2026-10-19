@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
-import { ABI, Bytes, KeyType, Signature, Transaction } from "@wireio/sdk-core";
+import { ABI, Bytes, KeyType, Signature, Transaction } from "../../src/wire/SdkCore.js";
 import { WireSerializer } from "../../src/wire/WireSerializer.js";
 import { assertShipChainId, receiptCpuUsage, selectShipRevision, ShipRevision, unpackReceiptTransaction } from "../../src/wire/WireShip.js";
 import ship from "../fixtures/wire-ship-abi.json";

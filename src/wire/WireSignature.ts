@@ -1,4 +1,4 @@
-import { ABIDecoder, ABIEncoder, Bytes, KeyType, Signature, type SignatureType } from "@wireio/sdk-core";
+import { ABIDecoder, ABIEncoder, Bytes, KeyType, Signature, type SignatureType } from "./SdkCore.js";
 
 const ED_SIGNATURE_BYTES = 96;
 

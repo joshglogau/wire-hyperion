@@ -5,7 +5,7 @@ import DSPoolWorker from "../../workers/ds-pool.js";
 import { TrxMetadata } from "../../../interfaces/trx-metadata.js";
 import { ActionTrace } from "../../../interfaces/action-trace.js";
 import { hLog } from "../../helpers/common_functions.js";
-import { PackedTransaction } from "@wireio/sdk-core";
+import { PackedTransaction } from "../../../wire/SdkCore.js";
 import { WireSerializer as Serializer } from "../../../wire/WireSerializer.js";
 import { unpackReceiptTransaction } from "../../../wire/WireShip.js";
 import { GetBlocksResultV0 } from "../../workers/state-reader.js";

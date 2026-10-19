@@ -1,6 +1,6 @@
 import {debugLog, hLog} from "../helpers/common_functions.js";
 import WebSocket from 'ws';
-import {ABI, Bytes} from "@wireio/sdk-core";
+import {ABI, Bytes} from "../../wire/SdkCore.js";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 
 export interface ShipServer {

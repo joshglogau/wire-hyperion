@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { ABI } from "@wireio/sdk-core";
+import { ABI } from "./SdkCore.js";
 import { WireSerializer } from "./WireSerializer.js";
 import type { HyperionDelta } from "../interfaces/hyperion-delta.js";
 
