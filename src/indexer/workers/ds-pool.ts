@@ -14,6 +14,7 @@ import { ABI, Action } from "@wireio/sdk-core";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 import { groupActionTraces } from "../helpers/action-dedup.js";
+import { historicalAbiAtBlock } from "../../wire/HistoricalAbi.js";
 
 interface CustomAbiDef {
     abi: string;
@@ -202,7 +203,7 @@ export default class DSPoolWorker extends HyperionWorker {
         fetch_offset: number
     ) {
         try {
-            const _includes = ["block", "actions", "tables"];
+            const _includes = ["block", "actions", "tables", "abi", "abi_hex"];
             if (get_json) {
                 _includes.push("abi");
             } else {
@@ -330,89 +331,20 @@ export default class DSPoolWorker extends HyperionWorker {
 
     async deserializeActionAtBlockNative(self: DSPoolWorker, action: HyperionActionAct, block_num: number): Promise<any> {
         self.recordContractUsage(action.account);
-        const [_status, actionType] = await self.verifyLocalType(action.account, action.name, block_num, "action");
-        if (_status && actionType) {
-            try {
-                return self.abieos.binToJson(action.account, actionType, Buffer.from(action.data, 'hex'));
-            } catch (e: any) {
-                debugLog(`(abieos) ${action.account}::${action.name} (type: "${actionType}") @ ${block_num} >>> ${e.message}`);
-            }
-        }
         return self.deserializeActionAtBlock(action, block_num);
     }
 
     async getContractAtBlock(accountName: string, block_num: number, check_action: string): Promise<ABI | null> {
-
-        // recover ABI from cache
-        if (this.contracts.has(accountName)) {
-            let _sc = this.contracts.get(accountName);
-            if (_sc) {
-                if ((_sc.valid_until > block_num && block_num > _sc.valid_from) || _sc.valid_until === -1) {
-                    if (_sc.contract.actions.find(value => value.name === check_action)) {
-                        return _sc.contract;
-                    }
-                }
-            }
-        }
-
-        let savedAbi: HyperionAbi | null;
-        let abi: ABI;
-        savedAbi = await this.fetchAbiHexAtBlockElastic(accountName, block_num, true, 0);
-        if (savedAbi === null || (savedAbi.actions && !savedAbi.actions.includes(check_action))) {
-            savedAbi = await this.getAbiFromHeadBlock(accountName);
-            if (!savedAbi) {
-                return null;
-            }
-            abi = ABI.from(savedAbi.abi)
-        } else {
-            try {
-                abi = ABI.from(savedAbi.abi);
-            } catch (e: any) {
-                hLog('failed to parse abi at getContractAtBlock --> ' + e.message);
-                return null;
-            }
-        }
-
-        if (!abi) {
-            return null;
-        }
-
-
-        if (check_action) {
-            // check if the action is in the abi
-            if (abi.getActionType(check_action)) {
-                if (!this.failedAbiMap.has(accountName) || !this.failedAbiMap.get(accountName)?.has(-1)) {
-                    try {
-                        this.abieos.loadAbi(accountName, JSON.stringify(abi));
-                    } catch (e:any) {
-                        hLog(`failed to load abi for ${accountName} @ ${block_num} >>> ${e.message}`);
-                    }
-                } else {
-                    debugLog('ignore reloading of current abi for', accountName);
-                }
-                this.contracts.set(accountName, {
-                    contract: abi,
-                    valid_until: savedAbi.valid_until ? savedAbi.valid_until : -1,
-                    valid_from: savedAbi.valid_from ? savedAbi.valid_from : -1
-                });
-            }
-        }
-        return abi;
+        const saved = await this.fetchAbiHexAtBlockElastic(accountName, block_num, true, 0);
+        const abi = historicalAbiAtBlock(saved, block_num);
+        return abi?.getActionType(check_action) ? abi : null;
     }
 
     async deserializeActionAtBlock(action: HyperionActionAct, block_num: number): Promise<any | null> {
-        const contract = await this.getContractAtBlock(action.account, block_num, action.name);
-        if (!contract) {
-            return null;
-        }
-        try {
-            const typedAction = Action.from(action);
-            const decodedData = typedAction.decodeData(contract);
-            return Serializer.objectify(decodedData);
-        } catch (e: any) {
-            debugLog(`(antelope) ${action.account}::${action.name} @ ${block_num} >>> ${e.message}`);
-            return null;
-        }
+        const abi = await this.getContractAtBlock(action.account, block_num, action.name);
+        const type = abi?.getActionType(action.name);
+        if (!abi || !type) return null;
+        return Serializer.objectify(Serializer.decode({ data: action.data, type, abi }));
     }
 
     async processMessages(messages: Message[]) {

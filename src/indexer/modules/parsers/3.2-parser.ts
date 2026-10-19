@@ -57,7 +57,7 @@ export default class HyperionParser extends BaseParser {
                 console.log(action);
             }
             action.receipt = action.receipt[1];
-            action.global_sequence = parseInt(action.receipt.global_sequence, 10);
+            action.global_sequence = String(action.receipt.global_sequence);
             delete action.except;
             if (action.error_code === null) {
                 delete action.error_code;

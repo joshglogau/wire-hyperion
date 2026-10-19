@@ -1274,6 +1274,7 @@ export default class MainDSWorker extends HyperionWorker {
                             block: block_num,
                             abi: jsonABIString,
                             abi_hex: abiHex,
+                            abi_sha256: createHash("sha256").update(Buffer.from(abiHex, "hex")).digest("hex"),
                             actions: abi_actions,
                             tables: abi_tables
                         };
@@ -1306,6 +1307,7 @@ export default class MainDSWorker extends HyperionWorker {
                     }
                 } catch (e: any) {
                     hLog(`Failed to process ABI from ${account['name']} at ${block_num}: ${e.message}`);
+                    throw e;
                 }
             } else {
                 if (account.name === 'eosio') {
@@ -1566,6 +1568,7 @@ export default class MainDSWorker extends HyperionWorker {
                                 );
                             } catch (e: any) {
                                 hLog(`Delta struct [${key}] processing error: ${e.message}`);
+                                throw e;
                                 // hLog(e);
                                 // hLog(data[1]);
                             }
@@ -1586,6 +1589,7 @@ export default class MainDSWorker extends HyperionWorker {
                 }
             } catch (e: any) {
                 hLog('deserializeNative >>', datatype, '>>', e.message);
+                throw e;
             }
             return null;
         }

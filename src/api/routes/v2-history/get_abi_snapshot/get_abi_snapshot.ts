@@ -30,6 +30,8 @@ async function getAbiSnapshot(fastify: FastifyInstance, request: FastifyRequest)
     if (results.hits.hits.length > 0) {
         if (should_fetch) {
             response['abi'] = JSON.parse(results.hits.hits[0]['_source']['abi']);
+            response['abi_hex'] = results.hits.hits[0]['_source']['abi_hex'];
+            response['abi_sha256'] = results.hits.hits[0]['_source']['abi_sha256'];
         } else {
             response['present'] = true;
         }

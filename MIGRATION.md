@@ -46,7 +46,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 3 | Complete | Replace retained WharfKit imports with public SDK Core 1.0.102 APIs, including RPC, ABI and exact Wire primitives; preserve existing service/worker structure. |
 | 4 | Complete | Add SDK public-extension codecs for full 96-byte FC ED signatures and bitsets; use SDK EC/WA/BLS formats and reject truncated/trailing payloads. Replace native decode instances with isolated SDK ABI contexts, without changing SDK wallet/signing behavior. |
 | 5 | Complete | Negotiate advertised Wire v0/v1 requests/status/results, stage ranges until verified status and re-negotiate on reconnect. Decode packed receipts/CPU arrays without invented legacy status/net/schedule fields. Reader decode failures no longer acknowledge lost payloads. |
-| 6 | Planned | Preserve historical ABIs, inline actions, notifications and failure visibility. |
+| 6 | Conservative | Decode actions only from proven historical ABI intervals; remove head/previous-block guesses, preserve raw ABI/checksums and raw undecodable actions. Keep upstream inline/notification deduplication and exact sequence strings. Same-block ABI timeline reconstruction remains a promotion gate. |
 | 7 | Planned | Handle Wire KV delta identities, deletions and composite keys correctly. |
 | 8 | Planned | Configure bounded, chain-scoped read APIs with explicit compatibility/deprecation responses. |
 | 9 | Planned | Retire obsolete specialized chain features without deleting generic governance history. |
@@ -62,7 +62,19 @@ inconsistent MIT label. CI has read-only repository permissions, covers `next`
 and does not publish or deploy. Contributor guidance is intentionally scoped to
 the compatibility work, not a rewrite of upstream conventions.
 
-## Deprecation contract
+## Historical ABI boundary
+
+The upstream ABI scan stores final ABI snapshots per block. It cannot prove the
+ABI of each action within a block that changes that contract's ABI. This draft
+therefore marks such actions (and missing ABI history) with `ds_error`, retains
+their raw data and does not guess the latest or previous ABI. Reconstructing an
+ordered in-block ABI timeline is still required for complete decoded history.
+Generic action/transaction history remains present; health must report these
+decode failures, not claim complete decoded coverage. Original ABI bytes and
+their SHA-256 are archived separately from the SDK's parsed ABI representation.
+Global sequence values are decimal strings with unsigned search mappings.
+
+## Deprecation responses
 
 Deprecated HTTP capabilities will retain their established method/path with an
 explicit HTTP 410 response identifying the capability, reason and supported

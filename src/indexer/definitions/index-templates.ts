@@ -59,7 +59,7 @@ export const action = {
         properties: {
             "@timestamp": {"type": "date"},
             "ds_error": {"type": "boolean"},
-            "global_sequence": {"type": "long"},
+            "global_sequence": {"type": "unsigned_long"},
             "account_ram_deltas.delta": {"type": "integer"},
             "account_ram_deltas.account": {"type": "keyword"},
             "act.authorization.permission": {"enabled": false},
@@ -83,8 +83,8 @@ export const action = {
             "inline_filtered": {"type": "boolean"},
             "receipts": {
                 "properties": {
-                    "global_sequence": {"type": "long"},
-                    "recv_sequence": {"type": "long"},
+                    "global_sequence": {"type": "unsigned_long"},
+                    "recv_sequence": {"type": "unsigned_long"},
                     "receiver": {"type": "keyword"},
                     "auth_sequence": {
                         "properties": {

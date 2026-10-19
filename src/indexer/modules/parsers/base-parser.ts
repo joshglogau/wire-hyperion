@@ -159,7 +159,7 @@ export abstract class BaseParser {
         let act = action.act;
         const original_act = Object.assign({}, act);
         let ds_act: any | null = null;
-        let error_message: string = '';
+        let error_message: string = 'Historical ABI unavailable or ambiguous at this block; raw action retained';
 
         // ignore for eosio.null::nonce
         if (act.account === this.configModule.config.settings.eosio_alias + '.null' && act.name === 'nonce') {
@@ -185,12 +185,8 @@ export abstract class BaseParser {
             }
         }
 
-        // retry with the last abi before the given block_num
-        if (!ds_act) {
-            debugLog('DS Failed ->>', original_act);
-            ds_act = await worker.common.deserializeActionAtBlockNative(worker, act, trx_data.block_num - 1);
-            debugLog('Retry with previous ABI ->>', ds_act);
-        }
+        // Missing/ambiguous historical ABIs remain raw; guessing a prior ABI can
+        // decode a same-size payload successfully with the wrong meaning.
 
         if (ds_act) {
 
@@ -222,7 +218,7 @@ export abstract class BaseParser {
                     block: trx_data.block_num,
                     account: act.account,
                     action: act.name,
-                    gs: parseInt(action.receipt[1].global_sequence, 10),
+                    gs: String(action.receipt[1].global_sequence),
                     message: error_message
                 }
             });

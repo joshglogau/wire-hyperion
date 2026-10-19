@@ -12,6 +12,8 @@ export interface HyperionAbi {
 }
 
 export interface SavedAbi {
+    block?: number;
+    abi_hex?: string;
     abi: ABI.Def;
     valid_until: number | null;
     valid_from: number | null;
