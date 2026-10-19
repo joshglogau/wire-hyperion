@@ -1,7 +1,7 @@
 import {debugLog, hLog} from "../helpers/common_functions.js";
 import WebSocket from 'ws';
 import {Abieos} from "@eosrio/node-abieos";
-import {ABI, Bytes, Serializer} from "@wharfkit/antelope";
+import {ABI, Bytes, Serializer} from "@wireio/sdk-core";
 
 export interface ShipServer {
     node: LabelledShipNode;

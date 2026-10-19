@@ -1,4 +1,4 @@
-import { Name, Serializer } from "@wharfkit/antelope";
+import { Name, Serializer } from "@wireio/sdk-core";
 import { cargo } from "async";
 import { Collection } from "mongodb";
 import { IAccount } from "../../interfaces/table-account.js";

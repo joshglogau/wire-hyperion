@@ -5,7 +5,7 @@ import {Abieos} from "@eosrio/node-abieos";
 import {terms} from "../../v2-history/get_actions/definitions.js";
 import {isBlockNumber} from "../../v2-history/get_actions/functions.js";
 import {Client, estypes} from "@elastic/elasticsearch";
-import {ABI, Serializer} from "@wharfkit/antelope";
+import {ABI, Serializer} from "@wireio/sdk-core";
 import {SavedAbi} from "../../../../interfaces/hyperion-abi.js";
 import {ActionTrace} from "../../../../interfaces/action-trace.js";
 

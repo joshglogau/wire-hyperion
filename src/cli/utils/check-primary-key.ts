@@ -1,4 +1,4 @@
-import {ABI, APIClient, Asset, Name, UInt64} from '@wharfkit/antelope';
+import {ABI, APIClient, Asset, Name, UInt64} from '@wireio/sdk-core';
 import {createHash} from "node:crypto"
 
 
@@ -68,7 +68,7 @@ export async function findAndValidatePrimaryKey(contractName: string, tableName:
             });
             const scopeRows = scopeResponse.rows;
             for (const scopeInfo of scopeRows) {
-                if (scopeInfo.count.toNumber() > 0) {
+                if (scopeInfo.count && scopeInfo.count.toNumber() > 0) {
                     foundScope = Name.from(scopeInfo.scope).toString();
                     console.log(`  -> Found non-empty scope: "${foundScope}" (count: ${scopeInfo.count.toNumber()})`);
                     break;

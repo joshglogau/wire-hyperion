@@ -1,4 +1,4 @@
-import {Name, PackedTransaction, Serializer, UInt64} from "@wharfkit/antelope";
+import {Name, PackedTransaction, Serializer, UInt64} from "@wireio/sdk-core";
 import {cargo} from "async";
 import {Collection} from "mongodb";
 import {IProposal} from "../../interfaces/table-proposal.js";

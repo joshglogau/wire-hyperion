@@ -12,7 +12,7 @@ import { StateHistorySocket } from "../connections/state-history.js";
 import { BasicDelta } from "../../interfaces/hyperion-delta.js";
 import { getHeapStatistics, HeapInfo } from "node:v8";
 import { HyperionActionAct } from "../../interfaces/hyperion-action.js";
-import { Action, APIClient } from "@wharfkit/antelope";
+import { Action, APIClient } from "@wireio/sdk-core";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 
 export abstract class HyperionWorker {

@@ -1,4 +1,4 @@
-import {ABI} from "@wharfkit/antelope";
+import {ABI} from "@wireio/sdk-core";
 
 export interface HyperionAbi {
     valid_until: number | null;

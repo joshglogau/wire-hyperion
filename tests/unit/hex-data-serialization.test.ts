@@ -5,13 +5,13 @@
  * via the v1 get_actions endpoint, the output could have incorrect
  * padding compared to what nodeos produces.
  *
- * The v4 code uses @wharfkit/antelope Serializer and node-abieos.
+ * The v4 code uses @wireio/sdk-core Serializer and node-abieos.
  * This test verifies that both produce identical, correctly padded
  * hex output for known action data.
  */
 
 import { describe, it, expect } from 'bun:test';
-import { ABI, Serializer } from '@wharfkit/antelope';
+import { ABI, Serializer } from '@wireio/sdk-core';
 
 // Minimal eosio.token ABI — just the transfer action
 const EOSIO_TOKEN_ABI = ABI.from({

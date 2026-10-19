@@ -1,6 +1,6 @@
 import { Client, estypes } from '@elastic/elasticsearch';
 
-import { API, APIClient } from '@wharfkit/antelope';
+import { API, APIClient } from '@wireio/sdk-core';
 import { queue, QueueObject } from 'async';
 
 import cluster, { Worker } from 'cluster';

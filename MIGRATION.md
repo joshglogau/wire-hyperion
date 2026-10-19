@@ -43,7 +43,7 @@ This ledger records completed work rather than implying planned work has shipped
 |---|---|---|
 | 1 | Complete | Preserve upstream attribution/license, mark draft version/private package, seed exact SDK/shared dependency pins, add contributor guidance and CI coverage for `next`. |
 | 2 | Complete | Mechanically extract the producer SHIP ABI as a provenance-linked fixture; guard finality, receipt and KV schema differences before adapting decoders. |
-| 3 | Planned | Integrate the published SDK Core at existing RPC and ABI seams. |
+| 3 | Complete | Replace retained WharfKit imports with public SDK Core 1.0.102 APIs, including RPC, ABI and exact Wire primitives; preserve existing service/worker structure. |
 | 4 | Planned | Prove Wire timestamps, EC/ED/BLS and SHIP primitive layouts without changing wallet signing. |
 | 5 | Planned | Support current Wire SHIP variants, blocks and receipt layouts. |
 | 6 | Planned | Preserve historical ABIs, inline actions, notifications and failure visibility. |
