@@ -1,6 +1,5 @@
 # Dockerfile for running Hyperion indexer/API in the E2E test environment.
-# Uses Ubuntu 24.04 to match the host's glibc (required for native modules
-# like @eosrio/node-abieos which are compiled against GLIBCXX_3.4.32+).
+# Retained upstream E2E scaffolding; not a certified Wire service deployment.
 
 FROM ubuntu:24.04
 
