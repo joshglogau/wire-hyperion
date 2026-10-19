@@ -72,7 +72,7 @@
   },
   "settings": {
     "preview": false,
-    "chain": "eos",
+    "chain": "wire",
     "parser": "wire",
     "system_contract": "sysio",
     "auto_stop": 0,
@@ -135,7 +135,7 @@
       "contracts": {}
     },
     "index_deltas": true,
-    "index_transfer_memo": true,
+    "index_transfer_memo": false,
     "index_all_deltas": true,
     "index_deltas_deletions": true,
     "deferred_trx": false,

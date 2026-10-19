@@ -12,5 +12,9 @@ changes, evidence and remaining deployment gates; this is not a production relea
 - Use platform logging and bind-registry rules in new Wire code. No fixed local
   service/test ports, keys, ledgers or environment files in source control.
 - Tests: `npm test` (Bun). Diagnostics: `npm run typecheck`. Build: `npm run build`.
+- After building, run `npm run test:node` for the actual Node SDK interoperability
+  check; Bun alone does not exercise the same package entry-point behavior.
+- Reference configs and the inherited setup/snapshot utilities are not a verified
+  Wire deployment recipe. See migration gates before starting services or writes.
 - Update the migration log and relevant tests with each targeted change. Do not
   claim live ingestion, recovery or database compatibility from unit tests alone.

@@ -9,6 +9,24 @@
 > The original [license](license.md) is retained unchanged; its conflict with
 > upstream package metadata must be resolved before a production release.
 
+### Validate the Wire draft
+
+Use Node 24 and Bun 1.3.14. npm's lockfile is authoritative; Bun runs tests only.
+
+```sh
+npm ci --ignore-scripts
+npm run typecheck
+npm run build
+npm run test:node
+npm test
+```
+
+These are offline checks, not a deployment. The read-only account/action history
+path uses SDK Core; removed capabilities return explicit deprecation errors.
+Historical ABI boundaries, retained upstream tools, database requirements and
+the separate live-acceptance plan are documented in [MIGRATION.md](MIGRATION.md).
+Do not run the inherited setup/snapshot tools as a Wire launch recipe.
+
 <!--suppress HtmlUnknownTarget, HtmlDeprecatedAttribute -->
 <br></br>
 <p align="center">
