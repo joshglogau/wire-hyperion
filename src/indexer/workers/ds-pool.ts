@@ -15,6 +15,7 @@ import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 import { groupActionTraces } from "../helpers/action-dedup.js";
 import { historicalAbiAtBlock } from "../../wire/HistoricalAbi.js";
+import { compareGlobalSequence } from "../../wire/WireSequence.js";
 
 interface CustomAbiDef {
     abi: string;
@@ -397,7 +398,7 @@ export default class DSPoolWorker extends HyperionWorker {
                 const trace_counters = { trace_index: 0 };
                 action_traces = await this.mLoader.parser.flattenInlineActions(action_traces, 0, trace_counters, 0);
                 action_traces.sort((a, b) => {
-                    return a[1].receipt[1].global_sequence - b[1].receipt[1].global_sequence;
+                    return compareGlobalSequence(a[1].receipt[1].global_sequence, b[1].receipt[1].global_sequence);
                 });
             }
 

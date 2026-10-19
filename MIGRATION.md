@@ -87,6 +87,9 @@ Generic action/transaction history remains present; health must report these
 decode failures, not claim complete decoded coverage. Original ABI bytes and
 their SHA-256 are archived separately from the SDK's parsed ABI representation.
 Global sequence values are decimal strings with unsigned search mappings.
+Transaction-cache entries are parsed before sorting; cached and flattened action
+order uses SDK Core `UInt64` comparison, not JavaScript subtraction. Already
+rounded numeric sequences are rejected instead of silently misordering history.
 
 ## Deprecation responses
 

@@ -4,6 +4,7 @@ import {resolveHotIndices} from "../../../helpers/hot-index.js";
 import {hLog} from "../../../../indexer/helpers/common_functions.js";
 import {regroupActions} from "../../../helpers/regroup-actions.js";
 import {API} from "../../../../wire/SdkCore.js";
+import {compareGlobalSequence} from "../../../../wire/WireSequence.js";
 
 async function getTransaction(fastify: FastifyInstance, request: FastifyRequest) {
     const redis = fastify.redis;
@@ -51,14 +52,14 @@ async function getTransaction(fastify: FastifyInstance, request: FastifyRequest)
     if (cachedData && Object.keys(cachedData).length > 0) {
         const gsArr: any[] = [];
         for (let cachedDataKey in cachedData) {
-            gsArr.push(cachedData[cachedDataKey]);
+            gsArr.push(JSON.parse(cachedData[cachedDataKey]));
         }
         gsArr.sort((a, b) => {
-            return a.global_sequence - b.global_sequence;
+            return compareGlobalSequence(a.global_sequence, b.global_sequence);
         });
         hits = gsArr.map(value => {
             return {
-                _source: JSON.parse(value)
+                _source: value
             };
         });
         const promiseResults = await Promise.all([
