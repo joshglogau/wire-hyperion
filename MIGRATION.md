@@ -45,7 +45,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 2 | Complete | Mechanically extract the producer SHIP ABI as a provenance-linked fixture; guard finality, receipt and KV schema differences before adapting decoders. |
 | 3 | Complete | Replace retained WharfKit imports with public SDK Core 1.0.102 APIs, including RPC, ABI and exact Wire primitives; preserve existing service/worker structure. |
 | 4 | Complete | Add SDK public-extension codecs for full 96-byte FC ED signatures and bitsets; use SDK EC/WA/BLS formats and reject truncated/trailing payloads. Replace native decode instances with isolated SDK ABI contexts, without changing SDK wallet/signing behavior. |
-| 5 | Planned | Support current Wire SHIP variants, blocks and receipt layouts. |
+| 5 | Complete | Negotiate advertised Wire v0/v1 requests/status/results, stage ranges until verified status and re-negotiate on reconnect. Decode packed receipts/CPU arrays without invented legacy status/net/schedule fields. Reader decode failures no longer acknowledge lost payloads. |
 | 6 | Planned | Preserve historical ABIs, inline actions, notifications and failure visibility. |
 | 7 | Planned | Handle Wire KV delta identities, deletions and composite keys correctly. |
 | 8 | Planned | Configure bounded, chain-scoped read APIs with explicit compatibility/deprecation responses. |

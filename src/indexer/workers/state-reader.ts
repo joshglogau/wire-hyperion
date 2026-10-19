@@ -3,6 +3,7 @@ import {cargo, QueueObject} from 'async';
 import {Channel, ConfirmChannel} from 'amqplib';
 import {ABI, API, Bytes, Checksum256, UInt32} from '@wireio/sdk-core';
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
+import { assertShipChainId, selectShipRevision, ShipRevision } from "../../wire/WireShip.js";
 
 import {HyperionWorker} from './hyperionWorker.js';
 import {debugLog, hLog} from '../helpers/common_functions.js';
@@ -60,7 +61,7 @@ export default class StateReader extends HyperionWorker {
     private local_lib = 0;
     private delay_active = false;
     private block_processing_delay = 100;
-    private shipRev = 'v0';
+    private shipRev = ShipRevision.v0;
 
     // private tempBlockSizeSum = 0;
     private shipInitStatus: any;
@@ -110,10 +111,6 @@ export default class StateReader extends HyperionWorker {
             this.conf.indexer.fetch_deltas = true;
         }
 
-        if (this.conf.settings.ship_request_rev) {
-            this.shipRev = this.conf.settings.ship_request_rev;
-        }
-
         this.baseRequest = {
             max_messages_in_flight: this.conf.prefetch.read,
             have_positions: [],
@@ -123,9 +120,6 @@ export default class StateReader extends HyperionWorker {
             fetch_deltas: this.conf.indexer.fetch_deltas
         };
 
-        if (this.shipRev === 'v1') {
-            this.baseRequest.fetch_block_header = true;
-        }
     }
 
     distribute(data: any[], cb: () => void) {
@@ -231,6 +225,11 @@ export default class StateReader extends HyperionWorker {
     }
 
     newRange(data: any) {
+
+        if (!this.shipInitStatus) {
+            this.pendingRequest = [data.first_block, data.last_block];
+            return;
+        }
 
         debugLog(`new_range [${data.first_block},${data.last_block}]`);
 
@@ -383,19 +382,9 @@ export default class StateReader extends HyperionWorker {
     }
 
     private async processIncomingBlocks(block_array: any[]) {
-        if (this.shipABI) {
-            for (const block of block_array) {
-                try {
-                    await this.onMessage(block);
-                } catch (e) {
-                    hLog(e);
-                }
-            }
-            this.ackBlockRange(block_array.length);
-        } else {
-            await this.onMessage(block_array[0]);
-            this.ackBlockRange(block_array.length);
-        }
+        let acknowledgements = 0;
+        for (const block of block_array) acknowledgements += (await this.onMessage(block)) ?? 0;
+        if (acknowledgements > 0) this.ackBlockRange(acknowledgements);
         if (this.delay_active) {
             await new Promise((resolve) => setTimeout(resolve, this.block_processing_delay));
         }
@@ -404,6 +393,7 @@ export default class StateReader extends HyperionWorker {
 
     private handleStatusResult(data: any) {
         this.shipInitStatus = Serializer.objectify(data);
+        assertShipChainId(this.shipInitStatus.chain_id, this.chainId);
         let beingBlock = this.shipInitStatus['chain_state_begin_block'];
 
         if (this.shipInitStatus['trace_begin_block'] > this.shipInitStatus['chain_state_begin_block']) {
@@ -412,6 +402,17 @@ export default class StateReader extends HyperionWorker {
 
         const endBlock = this.shipInitStatus['chain_state_end_block'];
         hLog(`SHIP Range from ${beingBlock} to ${endBlock}`);
+
+        if (this.recovery) {
+            this.recovery = false;
+            if (this.isLiveReader) this.requestBlocks(Math.max(this.local_block_num + 1, beingBlock));
+            else if (!this.completionSignaled && !this.repairMode) this.requestBlockRange(Math.max(this.local_block_num + 1, beingBlock), this.local_last_block || process.env.last_block);
+            return;
+        }
+        if (this.pendingRequest && this.allowRequests) {
+            this.processPending();
+            return;
+        }
 
         if (!this.conf.indexer.disable_reading || process.env['worker_role'] === 'repair_reader') {
             switch (process.env['worker_role']) {
@@ -738,7 +739,7 @@ export default class StateReader extends HyperionWorker {
     private async onMessage(data: Buffer) {
         if (!this.shipABI) {
             this.processFirstABI(data);
-            return 1;
+            return 0;
         }
 
         if (!process.env.worker_role) {
@@ -747,71 +748,29 @@ export default class StateReader extends HyperionWorker {
             process.exit(1);
         }
 
-        // NORMAL OPERATION MODE
-        if (!this.recovery) {
-            const result = Serializer.decode({
-                data,
-                type: 'result',
-                abi: this.shipABI
-            });
-            switch (result[0]) {
-                case 'get_status_result_v0': {
-                    this.handleStatusResult(result[1]);
-                    break;
-                }
-                case 'get_blocks_result_v0': {
-                    return await this.handleBlockResult(result[1], data);
-                }
-                default: {
-                    hLog(`Unknown message type: ${result[0]}`);
-                }
-            }
-        } else {
-            // RECOVERY MODE
-            if (this.isLiveReader) {
-                hLog(`Resuming live stream from block ${this.local_block_num}...`);
-                this.requestBlocks(this.local_block_num + 1);
-                this.recovery = false;
-            } else {
-                if (!this.completionSignaled) {
-                    let first = this.local_block_num;
-                    let last = this.local_last_block;
-                    if (last === 0) {
-                        if (process.env.last_block) {
-                            last = parseInt(process.env.last_block, 10);
-                        }
-                    }
-                    last = last - 1;
-                    if (first === 0) {
-                        if (process.env.first_block) {
-                            first = parseInt(process.env.first_block, 10);
-                        }
-                    }
-                    if (first > last) {
-                        last = first + 1;
-                    }
-                    hLog(`Resuming stream from block ${first} to ${last}...`);
-                    if (last - first > 0) {
-                        this.requestBlockRange(first, last);
-                        this.recovery = false;
-                    } else {
-                        hLog('Invalid range!');
-                    }
-                } else {
-                    hLog('Reader already finished, no need to restart.');
-                    this.recovery = false;
-                }
-            }
+        const result = Serializer.decode({ data, type: "result", abi: this.shipABI });
+        if (result[0] === "get_status_result_v0" || result[0] === "get_status_result_v1") {
+            this.handleStatusResult(result[1]);
+            return 0;
         }
+        if (!this.shipInitStatus) throw new Error("SHIP blocks arrived before verified status");
+        if (result[0] === "get_blocks_result_v0" || result[0] === "get_blocks_result_v1") {
+            await this.handleBlockResult(result[1], data);
+            return 1;
+        }
+        throw new Error(`Unsupported SHIP result: ${result[0]}`);
     }
 
     private processFirstABI(data: Buffer) {
         const abiString = data.toString();
         this.abieos.loadAbi('0', abiString);
         this.shipABI = ABI.from(abiString);
+        this.shipRev = selectShipRevision(this.shipABI, this.conf.settings.ship_request_rev);
+        if (this.shipRev === ShipRevision.v1) this.baseRequest.fetch_finality_data = true;
         process.send?.({event: 'init_abi', data: abiString});
         // request status
-        this.send(['get_status_request_v0', {}]);
+        const status = this.shipABI.getVariant("request")?.types.includes("get_status_request_v1") ? "get_status_request_v1" : "get_status_request_v0";
+        this.send([status, {}]);
     }
 
     private requestBlocks(start: number) {
@@ -1019,6 +978,8 @@ export default class StateReader extends HyperionWorker {
     }
 
     private startWS() {
+        this.shipABI = undefined;
+        this.shipInitStatus = undefined;
         this.ship.connect(
             this.blockReadingQueue.push,
             this.handleLostConnection.bind(this),

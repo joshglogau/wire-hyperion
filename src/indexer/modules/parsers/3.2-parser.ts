@@ -7,6 +7,7 @@ import { ActionTrace } from "../../../interfaces/action-trace.js";
 import { hLog } from "../../helpers/common_functions.js";
 import { PackedTransaction } from "@wireio/sdk-core";
 import { WireSerializer as Serializer } from "../../../wire/WireSerializer.js";
+import { unpackReceiptTransaction } from "../../../wire/WireShip.js";
 import { GetBlocksResultV0 } from "../../workers/state-reader.js";
 
 export default class HyperionParser extends BaseParser {
@@ -112,8 +113,8 @@ export default class HyperionParser extends BaseParser {
                         if (worker.conf.whitelists && (worker.conf.whitelists.actions.length > 0 || worker.conf.whitelists.deltas.length > 0)) {
                             allowProcessing = false;
                             for (const transaction of block.transactions) {
-                                if (transaction.status === 0 && transaction.trx[1] && transaction.trx[1].packed_trx) {
-                                    const unpacked_trx = PackedTransaction.from(transaction.trx[1].packed_trx).getTransaction();
+                                if (transaction.trx.packed_trx) {
+                                    const unpacked_trx = unpackReceiptTransaction(transaction);
                                     for (const act of unpacked_trx.actions) {
                                         if (this.checkWhitelist(act)) {
                                             allowProcessing = true;
@@ -125,8 +126,7 @@ export default class HyperionParser extends BaseParser {
                             }
                         }
                     } catch (e) {
-                        console.log(e);
-                        allowProcessing = true;
+                        throw e;
                     }
                 }
             }
@@ -134,7 +134,7 @@ export default class HyperionParser extends BaseParser {
             if (allowProcessing && res.traces && res.traces.length) {
                 traces = worker.deserializeNative('transaction_trace[]', res.traces.array);
                 if (!traces) {
-                    hLog(`[WARNING] transaction_trace[] deserialization failed on block ${res['this_block']['block_num']}`);
+                    throw new Error(`transaction_trace[] deserialization failed on block ${res['this_block']['block_num']}`);
                 }
             }
 
@@ -146,7 +146,7 @@ export default class HyperionParser extends BaseParser {
                 });
                 deltas = Serializer.objectify(decodedDeltas);
                 if (!deltas) {
-                    hLog(`[WARNING] table_delta[] deserialization failed on block ${res['this_block']['block_num']}`);
+                    throw new Error(`table_delta[] deserialization failed on block ${res['this_block']['block_num']}`);
                 }
             }
 

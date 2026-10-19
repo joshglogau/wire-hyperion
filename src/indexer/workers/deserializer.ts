@@ -15,6 +15,7 @@ import { HyperionSignedBlock, ProducerSchedule } from "../../interfaces/signed-b
 import { estypes } from "@elastic/elasticsearch";
 import { ABI, Action, PackedTransaction } from "@wireio/sdk-core";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
+import { receiptCpuUsage, unpackReceiptTransaction } from "../../wire/WireShip.js";
 import { TokenAccount } from "../../interfaces/custom-ds.js";
 import { GetBlocksResultV0 } from "./state-reader.js";
 import { de } from "zod/v4/locales";
@@ -43,9 +44,9 @@ interface HyperionLightBlock {
     prev_id: string;
     producer: string;
     new_producers?: ProducerSchedule;
-    schedule_version: number;
+    schedule_version?: number;
     cpu_usage: number;
-    net_usage: number;
+    net_usage?: number;
     trx_count: number;
 }
 
@@ -298,148 +299,22 @@ export default class MainDSWorker extends HyperionWorker {
                     return null;
                 }
                 light_block = {
-                    '@timestamp': block['timestamp'],
-                    block_num: res.this_block.block_num.toNumber(),
-                    block_id: res.this_block.block_id.toString().toLowerCase(),
-                    prev_id: res.prev_block.block_id.toString().toLowerCase(),
+                    '@timestamp': block.timestamp,
+                    block_num,
+                    block_id,
+                    prev_id: block.previous,
                     producer: block.producer,
-                    new_producers: block.new_producers,
-                    schedule_version: block.schedule_version,
-                    cpu_usage: 0,
-                    net_usage: 0,
-                    trx_count: 0
+                    cpu_usage: receiptCpuUsage(block.transactions),
+                    trx_count: block.transactions.filter(receipt => {
+                        if (!this.filters.action_blacklist.size && !this.filters.action_whitelist.size) return true;
+                        const actions = unpackReceiptTransaction(receipt).actions;
+                        return !actions.some(action => this.checkBlacklist(action)) &&
+                            (!this.filters.action_whitelist.size || actions.some(action => this.checkWhitelist(action)));
+                    }).length
                 };
-
-                producer = block['producer'];
-                ts = block['timestamp'];
-
+                producer = block.producer;
+                ts = block.timestamp;
                 block_ts = ts;
-
-                let total_cpu = 0;
-                let total_net = 0;
-
-                const failedTrx: any[] = [];
-
-                block.transactions.forEach((trx) => {
-
-                    let valid = true;
-
-                    // Check if the transaction is blacklisted or whitelisted
-                    if (this.filters.action_blacklist.size > 0 || this.filters.action_whitelist.size > 0) {
-
-                        // valid should be false by default if any whitelist is present
-                        valid = this.filters.action_whitelist.size === 0;
-
-                        try {
-                            const unpacked_trx = PackedTransaction.from(trx.trx[1]).getTransaction();
-                            for (const act of unpacked_trx.actions) {
-
-                                if (this.filters.action_blacklist.size > 0 && this.checkBlacklist(act)) {
-                                    valid = false;
-                                    // hLog(`Blacklisted action found in block ${block_num}: ${act.account}::${act.name}`);
-                                    break;
-                                }
-
-                                if (this.filters.action_whitelist.size > 0 && this.checkWhitelist(act)) {
-                                    valid = true;
-                                    // hLog(`Whitelisted action found in block ${block_num}: ${act.account}::${act.name}`);
-                                    break;
-                                }
-
-                            }
-                        } catch (error: any) {
-                            hLog(`Failed to unpack transaction in block ${block_num}:`, error.message);
-                        }
-                        
-                    }
-
-                    total_cpu += trx['cpu_usage_us'];
-                    total_net += trx['net_usage_words'];
-
-                    if (trx.status === 0) {
-
-                        if (light_block && valid) {
-                            light_block.trx_count++;
-                        }
-
-                    } else {
-                        if (this.conf.features.failed_trx) {
-                            switch (trx.status) {
-
-                                // soft_fail: objectively failed (not executed), error handler executed
-                                case 1: {
-                                    failedTrx.push({
-                                        id: trx.trx[1],
-                                        status: trx.status,
-                                        cpu: trx.cpu_usage_us,
-                                        net: trx.net_usage_words
-                                    });
-                                    break;
-                                }
-
-                                // hard_fail: objectively failed and error handler objectively failed thus no state change
-                                case 2: {
-                                    failedTrx.push({
-                                        id: trx.trx[1],
-                                        status: trx.status,
-                                        cpu: trx.cpu_usage_us,
-                                        net: trx.net_usage_words
-                                    });
-                                    break;
-                                }
-
-                                // delayed: transaction delayed/deferred/scheduled for future execution
-                                // case 3: {
-                                //     hLog('delayed', block_num);
-                                //     console.log(trx);
-                                //     const unpackedTrx = this.api.deserializeTransaction(Buffer.from(trx.trx[1].packed_trx, 'hex'));
-                                //     console.log(unpackedTrx);
-                                //     break;
-                                // }
-
-                                // expired: transaction expired and storage space refunded to user
-                                case 4: {
-                                    failedTrx.push({
-                                        id: trx.trx[1],
-                                        status: trx.status
-                                    });
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                });
-
-                if (light_block) {
-                    light_block.cpu_usage = total_cpu;
-                    light_block.net_usage = total_net;
-                }
-
-                // hLog(`Transaction Count: ${light_block.trx_count}`);
-
-                // submit failed trx
-                if (failedTrx.length > 0) {
-                    for (const tx of failedTrx) {
-                        if (typeof tx.id === 'string') {
-                            const payload = {
-                                "@timestamp": ts,
-                                "block_num": block_num,
-                                trx_id: tx.id,
-                                status: tx.status
-                            };
-                            await this.pushToIndexQueue(payload, 'trx_error');
-                        }
-                    }
-                }
-
-                if (light_block && light_block.new_producers) {
-                    process.send?.({
-                        event: 'new_schedule',
-                        block_num: light_block.block_num,
-                        new_producers: light_block.new_producers,
-                        live: process.env.live_mode
-                    });
-                }
 
                 // stream light block
                 if (this.allowStreaming && this.ch && light_block) {

@@ -151,7 +151,7 @@ export class StateHistorySocket {
             } else {
                 if (s.chainId === 'N/A') {
                     hLog(`⚠️⚠️️ SHIP Server ${s.node.url} :: Chain ID not available`);
-                    return true;
+                    return false;
                 } else {
                     if (s.chainId) {
                         hLog(`⚠️⚠️️ Removing SHIP Server ${s.node.url} :: Chain ID mismatch`);
@@ -189,12 +189,14 @@ export class StateHistorySocket {
             const timeout = setTimeout(() => {
                 server.active = false;
                 hLog(`Testing SHIP Server ${server.node.url} :: Timeout after 5s`);
+                tempWS.close();
                 resolve();
             }, 5000);
 
             hLog(`Testing SHIP Server ${server.node.url}`);
             const tempWS = new WebSocket(server.node.url);
             tempWS.on('message', (data: Buffer) => {
+              try {
                 if (!protocolAbi) {
                     const abiString = data.toString();
                     protocolAbi = ABI.from(abiString);
@@ -213,7 +215,7 @@ export class StateHistorySocket {
                     });
                     const result = Serializer.objectify(decoded);
 
-                    if (result[0] === 'get_status_result_v0') {
+                    if (result[0] === 'get_status_result_v0' || result[0] === 'get_status_result_v1') {
                         if (result[1].chain_id) {
                             server.chainId = result[1].chain_id.toLowerCase();
                             server.traceBeginBlock = result[1].trace_begin_block;
@@ -222,7 +224,7 @@ export class StateHistorySocket {
                         } else {
                             hLog(`[WARNING] ${server.node.url} didn't respond chain_id on get_status_result_v0 :: Cannot guarantee data integrity`);
                             server.chainId = 'N/A';
-                            server.active = true;
+                            server.active = false;
                             server.traceBeginBlock = result[1].trace_begin_block;
                             server.traceEndBlock = result[1].trace_end_block;
                         }
@@ -231,6 +233,13 @@ export class StateHistorySocket {
                         tempWS.close();
                     }
                 }
+              } catch (error) {
+                hLog(`Invalid SHIP response: ${error instanceof Error ? error.message : String(error)}`);
+                server.active = false;
+                clearTimeout(timeout);
+                tempWS.close();
+                resolve();
+              }
             });
             tempWS.on('error', (err) => {
                 hLog(`${server.node.label} SHIP Test Failed ${server.node.url} :: ${err.message}`);
@@ -238,6 +247,7 @@ export class StateHistorySocket {
                 tempWS.close();
             });
             tempWS.on('close', () => {
+                clearTimeout(timeout);
                 resolve();
             });
         });
