@@ -61,4 +61,36 @@ describe("current Wire SHIP", () => {
         await expect(Reflect.apply(Reflect.get(reader, "processIncomingBlocks"), reader, [[Buffer.from([0])]])).rejects.toThrow("malformed payload");
         expect(acknowledged).toBe(false);
     });
+
+    it("does not delete history or discard a fork checkpoint on RPC failure", async () => {
+        let deleted = false;
+        const reader = Object.assign(Object.create(StateReader.prototype), {
+            forkedBlocks: new Map([["candidate", { block_num: 3, timestamp: 0 }]]),
+            local_lib: 1,
+            rpc: { v1: { chain: { async get_block() { throw new Error("RPC unavailable"); } } } },
+            async deleteForkedBlockById() { deleted = true; }
+        });
+        try {
+            await Reflect.apply(Reflect.get(reader, "removeForkedBlocks"), reader, []);
+            expect(deleted).toBe(false);
+            expect(reader.forkedBlocks.has("candidate")).toBe(true);
+        } finally {
+            const timer = Reflect.get(reader, "forkHandlingTimeout");
+            if (timer) clearTimeout(timer);
+        }
+    });
+
+    it("scopes fork cleanup to the exact block identity and includes its ABI snapshots", async () => {
+        const requests: { index: string[]; query: { term: { block_id: string } } }[] = [];
+        const reader = Object.assign(Object.create(StateReader.prototype), {
+            chain: "namespace", conf: { settings: { index_version: "wire-v1" } },
+            client: { async deleteByQuery(request: { index: string[]; query: { term: { block_id: string } } }) { requests.push(request); return { failures: [], version_conflicts: 0, timed_out: false }; } }
+        });
+        await Reflect.apply(Reflect.get(reader, "deleteForkedBlockById"), reader, ["orphan", 3]);
+        expect(requests).toHaveLength(4);
+        expect(requests.every(request => request.query.term.block_id === "orphan")).toBe(true);
+        expect(requests[3].index).toEqual(["namespace-abi-wire-v1", "namespace-abi-wire-v1-*"]);
+        reader.client.deleteByQuery = async () => ({ failures: [], version_conflicts: 1, timed_out: false });
+        await expect(Reflect.apply(Reflect.get(reader, "deleteForkedBlockById"), reader, ["orphan", 3])).rejects.toThrow("incomplete");
+    });
 });

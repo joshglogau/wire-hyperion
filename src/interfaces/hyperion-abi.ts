@@ -4,6 +4,7 @@ export interface HyperionAbi {
     valid_until: number | null;
     valid_from: number | null;
     block?: number;
+    block_id?: string;
     account?: string;
     abi: ABI.Def | string;
     abi_hex?: string;

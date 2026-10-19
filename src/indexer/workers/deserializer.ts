@@ -1270,7 +1270,7 @@ export default class MainDSWorker extends HyperionWorker {
             }
         },
 
-        "account": async (account: any, block_num: number, block_ts: string) => {
+        "account": async (account: any, block_num: number, block_ts: string, _row: { present: number | boolean }, block_id: string) => {
             if (account['abi'] !== '') {
                 try {
                     const abiHex = account['abi'];
@@ -1289,6 +1289,7 @@ export default class MainDSWorker extends HyperionWorker {
                             '@timestamp': block_ts,
                             account: account['name'],
                             block: block_num,
+                            block_id,
                             abi: jsonABIString,
                             abi_hex: abiHex,
                             abi_sha256: createHash("sha256").update(Buffer.from(abiHex, "hex")).digest("hex"),

@@ -1,6 +1,6 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from "fastify";
 import {connect} from "amqplib";
-import {timedQuery} from "../../../helpers/functions.js";
+import { sampleWireHistory } from "../../../../wire/WireHealth.js";
 import {
     getFirstIndexedBlock,
     getLastIndexedBlockWithTotalBlocks,
@@ -314,6 +314,7 @@ async function getHealthQuery(fastify: FastifyInstance) {
         health: ServiceResponse<any>[],
         limits: any
         features: any,
+        wire_history?: Awaited<ReturnType<typeof sampleWireHistory>> | { experimental: boolean; status: string; error: string },
         pruning: {
             auto_pruning_enabled: boolean,
             max_retained_blocks: number,
@@ -359,11 +360,21 @@ async function getHealthQuery(fastify: FastifyInstance) {
         }
     }
 
+    try {
+        response.wire_history = await sampleWireHistory(fastify);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        hLog(`Wire history health unavailable: ${message}`);
+        response.wire_history = { experimental: true, status: "UNAVAILABLE", error: message };
+    }
     return response;
 }
 
 export function healthHandler(fastify: FastifyInstance, route: string) {
     return async (request: FastifyRequest, reply: FastifyReply) => {
-        reply.send(await timedQuery(getHealthQuery, fastify, request, route));
+        const start = process.hrtime.bigint();
+        const response = await getHealthQuery(fastify);
+        const indexedHead = response.wire_history && "indexed_head" in response.wire_history ? response.wire_history.indexed_head : null;
+        reply.send({ ...response, last_indexed_block: indexedHead?.block_num ?? null, last_indexed_block_time: indexedHead?.timestamp ?? null, query_time_ms: Number(process.hrtime.bigint() - start) / 1000000 });
     }
 }

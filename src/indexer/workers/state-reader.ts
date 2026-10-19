@@ -1,9 +1,10 @@
 import WebSocket from 'ws';
 import {cargo, QueueObject} from 'async';
 import {Channel, ConfirmChannel} from 'amqplib';
-import {ABI, API, Bytes, Checksum256, UInt32} from '../../wire/SdkCore.js';
+import {ABI, Bytes, Checksum256, UInt32} from '../../wire/SdkCore.js';
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { assertShipChainId, selectShipRevision, ShipRevision } from "../../wire/WireShip.js";
+import { activeHistoryIndices } from "../../wire/WireHealth.js";
 
 import {HyperionWorker} from './hyperionWorker.js';
 import {debugLog, hLog} from '../helpers/common_functions.js';
@@ -539,57 +540,30 @@ export default class StateReader extends HyperionWorker {
         const removedList: any[] = [];
         for (const [block_id, val] of forkedBlocks) {
             try {
-                // Confirm the block was actually forked using the chain api
-                let blockData: API.v1.GetBlockResponse | null = null;
-                try {
-                    blockData = await this.rpc.v1.chain.get_block(block_id.toLowerCase());
-                    if (blockData) {
-                        if (blockData.block_num.toNumber() === val.block_num) {
-                            // console.log(`Block ${blockData.block_num.toNumber()} ${block_id} is still present on the chain, not forked.`);
-                            // check if the block is older than the last irreversible block
-                            if (val.block_num <= this.local_lib) {
-                                console.log(`Block ${block_id} is older than the lib, definitely not forked.`);
-                                this.forkedBlocks.delete(block_id);
-                            } else {
-                                // check the current id for the same block number on the reversible block map
-                                const currentBlockId = this.reversibleBlockMap.get(blockData.block_num.toNumber());
-                                if (currentBlockId && currentBlockId !== block_id) {
-                                    // handle as a forked block, since a new different id was received after the fork
-                                    blockData = null;
-                                } else {
-                                    pendingList.push({block_id, ...val});
-                                }
-                            }
-                        } else {
-                            hLog(`[WARNING] Unexpected block number for ${block_id}: ${blockData.block_num.toNumber()} (expected: ${val.block_num})`);
-                        }
-                    }
-                } catch (e: any) {
-                    console.log(e.message);
-                    // delete the block from the forked blocks map
-                    this.forkedBlocks.delete(block_id);
-                }
-
-                if (blockData === null) {
-                    // console.log(`Block ${block_id} not found, confirming it was forked.`);
-                    removedList.push({block_id, ...val});
+                const canonical = await this.rpc.v1.chain.get_block(val.block_num);
+                if (canonical.id.toString().toLowerCase() === block_id.toLowerCase()) {
+                    if (val.block_num <= this.local_lib) this.forkedBlocks.delete(block_id);
+                    else pendingList.push({ block_id, ...val });
+                } else {
                     await this.deleteForkedBlockById(block_id, val.block_num);
-                    // delete the block from the forked blocks map
+                    removedList.push({ block_id, ...val });
                     this.forkedBlocks.delete(block_id);
                 }
-            } catch (e: any) {
-                hLog(`Error deleting forked block ${block_id}: ${e.message}`);
+            } catch (error) {
+                hLog(`Fork reconciliation deferred for ${block_id}: ${error instanceof Error ? error.message : String(error)}`);
+                pendingList.push({ block_id, ...val });
             }
         }
 
         if (pendingList.length > 0) {
             // re-schedule the fork handling
             const lastBlock = pendingList[pendingList.length - 1];
-            const timeToLib = (lastBlock.block_num - this.local_lib) * 500;
-            console.log(`Block ${lastBlock.block_id} is not forked, rescheduling fork handling in ${timeToLib}ms...`);
-            setTimeout(() => {
-                this.removeForkedBlocks().catch(console.error);
+            const timeToLib = Math.max(1000, (lastBlock.block_num - this.local_lib) * 500);
+            hLog(`Fork reconciliation pending for ${lastBlock.block_id}; retrying in ${timeToLib}ms`);
+            this.forkHandlingTimeout = setTimeout(() => {
+                this.removeForkedBlocks().catch(error => hLog(`Fork reconciliation failed: ${error instanceof Error ? error.message : String(error)}`));
             }, timeToLib);
+            this.forkHandlingTimeout.unref();
         }
 
         if (removedList.length > 0) {
@@ -597,7 +571,7 @@ export default class StateReader extends HyperionWorker {
         }
 
         this.forkHandlingMode = false;
-        this.forkHandlingTimeout = null;
+        if (pendingList.length === 0) this.forkHandlingTimeout = null;
     }
 
     private cleanReversibleBlocks(lib: BlockInfo) {
@@ -820,68 +794,15 @@ export default class StateReader extends HyperionWorker {
         }
     }
 
-    private async deleteForkedBlockById(block_id: string, block_num: number) {
-        const searchBody = {query: {bool: {must: [{term: {block_id: block_id}}]}}};
-
-        // use the block_num and the index partition size to determine the index to search
-        const indexPartition = Math.floor(block_num / this.conf.settings.index_partition_size);
-        const indexName = this.chain + '-block-' + this.conf.settings.index_version + '-' + indexPartition.toString().padStart(6, '0');
-
-        // remove block
-        try {
-            const blockResult = await this.client.deleteByQuery({
-                index: this.chain + '-block-' + this.conf.settings.index_version + '-*',
-                refresh: true,
-                ...searchBody
-            });
-            if (blockResult && blockResult.deleted && blockResult.deleted > 0) {
-                hLog(`${blockResult.deleted} blocks removed from ${block_id}`);
-            } else {
-                if (blockResult.failures && blockResult.failures.length > 0) {
-                    hLog('dbqResultBlock - Operation failed');
-                    console.log(blockResult.failures);
-                }
-            }
-        } catch (e: any) {
-            hLog(`Error deleting block ${block_id}: ${e.message}`);
-        }
-
-        // remove deltas
-        try {
-            const dbqResultDelta = await this.client.deleteByQuery({
-                index: this.chain + '-delta-' + this.conf.settings.index_version + '-*',
-                refresh: true,
-                ...searchBody
-            });
-            if (dbqResultDelta && dbqResultDelta.deleted && dbqResultDelta.deleted > 0) {
-                hLog(`${dbqResultDelta.deleted} deltas removed from ${block_id}`);
-            } else {
-                if (dbqResultDelta.failures && dbqResultDelta.failures.length > 0) {
-                    hLog('dbqResultDelta - Operation failed');
-                    console.log(dbqResultDelta.failures);
-                }
-            }
-        } catch (e: any) {
-            hLog(`Error deleting deltas for block ${block_id}: ${e.message}`);
-        }
-
-        // remove actions
-        try {
-            const dbqResultAction = await this.client.deleteByQuery({
-                index: this.chain + '-action-' + this.conf.settings.index_version + '-*',
-                refresh: true,
-                ...searchBody
-            });
-            if (dbqResultAction && dbqResultAction.deleted && dbqResultAction.deleted > 0) {
-                hLog(`${dbqResultAction.deleted} traces removed from ${block_id}`);
-            } else {
-                if (dbqResultAction.failures && dbqResultAction.failures.length > 0) {
-                    hLog('dbqResultAction - Operation failed');
-                    console.log(dbqResultAction.failures);
-                }
-            }
-        } catch (e: any) {
-            hLog(`Error deleting actions for block ${block_id}: ${e.message}`);
+    private async deleteForkedBlockById(block_id: string, _block_num: number) {
+        const results = await Promise.all(["block", "delta", "action", "abi"].map(kind => this.client.deleteByQuery({
+            index: activeHistoryIndices(this.chain, kind, this.conf.settings.index_version),
+            ignore_unavailable: true,
+            refresh: true,
+            query: { term: { block_id } }
+        })));
+        if (results.some(result => result.timed_out || result.version_conflicts || result.failures?.length)) {
+            throw new Error("Fork cleanup was incomplete; retry before discarding the fork checkpoint");
         }
     }
 

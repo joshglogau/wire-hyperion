@@ -51,7 +51,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 8 | Complete | Select the Wire parser/system contract, isolate queues/indices/cache/databases by lossless chain-derived namespace, reject mismatched RPC identity, retain bounded history and return explicit HTTP 410 for retired state/statistics/proxy capabilities. |
 | 9 | Bounded | Replace legacy action enrichers, DSP console-event parser, state-route bodies and unsupported synchronizers with explicit deprecation stubs. Preserve account/multisig table handling and unproven backend consumers; broader table removal/startup feature rejection was not accepted by safety review and is deferred for explicit owner review. |
 | 10 | Complete, bounded | Verify the public SDK CommonJS seam under Node 24, replace the manual native diagnostic with a passing SDK probe, then remove native ABI/WharfKit dependencies after an empty retained-import inventory. npm's lockfile is authoritative; the stale secondary Bun lockfile is removed. Optional backend removals remain deferred where consumers are unproven. |
-| 11 | Planned | Expose truthful coverage, lag and indexing failures through compatible health fields. |
+| 11 | Offline verified | Add uncached, schema-scoped durable head/LIB/coverage/decode-error health with canonical LIB comparison. Preserve SDK health fields. Fix missing-index bulk acknowledgements/progress and normalize message IDs. Fork cleanup requires canonical RPC confirmation, includes ABI snapshots and retries failures; live concurrent replay remains an acceptance gate. |
 | 12 | Planned | Record reproducible validation and operational/release gates. |
 
 ### Step 1 — baseline and contribution boundaries
@@ -128,6 +128,27 @@ schedule/statistics/trace/stream APIs and transaction-forwarding routes return
 No live service, public endpoint or consumer configuration was changed.
 
 ## Validation and promotion gates
+
+### Health and recovery semantics
+
+`v2/health` retains upstream fields and adds `wire_history`. Its durable
+coverage is sampled without response caching and scoped to the selected index
+schema. It compares the indexed LIB's ID with canonical RPC, counts unresolved
+action/delta decode errors and reports a count-based gap lower bound. Document
+counts cannot prove distinct-height continuity (duplicates can conceal gaps), so
+the response explicitly does not certify contiguous or genesis-complete history.
+Default health bounds are 64 blocks of lag and 60 seconds of
+RPC-head age; the response includes these policy limits. Backend errors produce
+`UNAVAILABLE`, not an empty healthy range.
+
+Bulk writes to missing indices are requeued; an absent-document delete alone can
+acknowledge a 404 without an error. Partially failed batches do not advance
+reported indexed progress, and message IDs use the same string identity as the
+search backend. Fork cleanup compares canonical block IDs by height, never treats
+an RPC failure as proof of a fork, covers partitioned/nonpartitioned block/action/
+delta/ABI indices, and retains retry checkpoints after incomplete cleanup. ABI
+snapshots carry their source block ID. These are offline-tested behaviors, not
+proof of live queue fencing, cache invalidation or concurrent reorg recovery.
 
 - Preserve and run upstream unit tests; add binary-consumption and SDK consumer
   fixtures, exact integer/key identities and malformed-input cases.
