@@ -1,5 +1,6 @@
 import { readConnectionConfig } from "../repair-cli/functions.js";
 import { HyperionConnections } from "../../interfaces/hyperionConnections.js";
+import { wireNamespace } from "../../wire/WireConfiguration.js";
 
 interface QueueInfo {
     name: string;
@@ -75,6 +76,7 @@ export class QueueManager {
             let filteredQueues = allQueues;
             
             if (!options.showAll && chain) {
+                chain = wireNamespace(this.connections.chains[chain]?.chain_id ?? "");
                 // Filter to only get queues that start with the chain prefix
                 filteredQueues = allQueues.filter(queue => queue.name.startsWith(`${chain}:`));
             }

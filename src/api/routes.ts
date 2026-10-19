@@ -3,6 +3,7 @@ import {FastifyError, FastifyInstance, FastifyReply, FastifyRequest, FastifySche
 import {addSharedSchemas, handleChainApiRedirect} from "./helpers/functions.js";
 import autoLoad from '@fastify/autoload';
 import {Readable} from "node:stream";
+import { registerWireRoutePolicy, retiredCapability } from "../wire/WireRoutes.js";
 
 function addRedirect(server: FastifyInstance, url: string, redirectTo: string) {
     server.route({
@@ -25,6 +26,7 @@ function addRoute(server: FastifyInstance, handlersPath: string, prefix: string)
 }
 
 export function registerRoutes(server: FastifyInstance) {
+    registerWireRoutePolicy(server);
 
     // build internal map of routes
     const routeSet = new Set<string>();
@@ -100,10 +102,10 @@ export function registerRoutes(server: FastifyInstance) {
             // const data = await got.get(`${server.chain_api}/v1/node/get_supported_apis`).json() as any;
             if (data.apis && data.apis.length > 0) {
                 const apiSet = new Set(server.routeSet);
-                data.apis.forEach((a) => apiSet.add(a));
-                reply.send({apis: [...apiSet]});
+                data.apis.forEach((a) => { if (!retiredCapability(a)) apiSet.add(a); });
+                reply.send({apis: [...apiSet].filter(path => !retiredCapability(path))});
             } else {
-                reply.send({apis: [...server.routeSet], error: 'nodeos did not send any data'});
+                reply.send({apis: [...server.routeSet].filter(path => !retiredCapability(path)), error: 'nodeos did not send any data'});
             }
         }
     });

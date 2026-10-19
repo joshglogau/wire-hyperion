@@ -4,6 +4,7 @@ import {HyperionBlock} from "./interfaces.js";
 import path from "path";
 import {HyperionConfig} from "../../interfaces/hyperionConfig.js";
 import { HyperionConnections } from "../../interfaces/hyperionConnections.js";
+import { configureWireRuntime } from "../../wire/WireConfiguration.js";
 
 export function readConnectionConfig(): HyperionConnections {
     const connectionsConfigPath = path.join(import.meta.dirname, '../../../', 'config/connections.json');
@@ -28,7 +29,9 @@ export function initESClient(config: any) {
 export function readChainConfig(chain: string): HyperionConfig {
     const chainConfigPath = path.join(import.meta.dirname, '../../../', `config/chains/${chain}.config.json`);
     const file = readFileSync(chainConfigPath, 'utf8');
-    return JSON.parse(file);
+    const config = JSON.parse(file) as HyperionConfig;
+    configureWireRuntime(config, readConnectionConfig());
+    return config;
 }
 
 export async function getFirstIndexedBlock(client: Client, blockIndex: string) {

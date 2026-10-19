@@ -160,7 +160,7 @@ export async function scanChain(chain: string, args: any) {
 
     printHeader();
 
-    const blockIndex = `${chain}-block-${chainConfig.settings.index_version}`;
+    const blockIndex = `${chainConfig.settings.chain}-block-${chainConfig.settings.index_version}`;
 
     console.log(`Using block index: ${blockIndex}`);
 
@@ -228,7 +228,7 @@ export async function quickScanChain(chain: string, args: any) {
 
     printHeader();
 
-    const blockIndex = `${chain}-block-${chainConfig.settings.index_version}`;
+    const blockIndex = `${chainConfig.settings.chain}-block-${chainConfig.settings.index_version}`;
 
     console.log(`Using block index: ${blockIndex}`);
 
@@ -349,7 +349,7 @@ export async function scanActions(chain: string, args: any) {
     printHeader();
     console.log('🔍 Scanning for missing actions using validation API...\n');
 
-    const blockIndex = `${chain}-block-${chainConfig.settings.index_version}`;
+    const blockIndex = `${chainConfig.settings.chain}-block-${chainConfig.settings.index_version}`;
     console.log(`Using block index: ${blockIndex}`);
 
     let firstBlock: number;

@@ -17,7 +17,7 @@ async function getCreatedAccounts(fastify: FastifyInstance, request: FastifyRequ
                 must: [
                     {term: {"act.authorization.actor": query.account.toLowerCase()}},
                     {term: {"act.name": "newaccount"}},
-                    {term: {"act.account": "eosio"}}
+                    {term: {"act.account": fastify.manager.config.settings.eosio_alias}}
                 ]
             }
         },
@@ -35,7 +35,7 @@ async function getCreatedAccounts(fastify: FastifyInstance, request: FastifyRequ
             const _tmp = {};
             if (action['act']['data']['newact']) {
                 _tmp['name'] = action['act']['data']['newact'];
-            } else if (action['@newaccount']['newact']) {
+            } else if (action['@newaccount']?.['newact']) {
                 _tmp['name'] = action['@newaccount']['newact'];
             } else {
                 console.log(action);

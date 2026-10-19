@@ -22,6 +22,7 @@ export class HyperionModuleLoader {
     private config: HyperionConfig;
     public parser?: BaseParser;
     public plugins: HyperionPlugin[];
+    private readonly actionHandlersReady: Promise<void>;
 
     constructor(private cm: ConfigurationModule) {
         this.plugins = [];
@@ -32,7 +33,7 @@ export class HyperionModuleLoader {
             process.exit(0);
         }
         this.chainID = this.conn.chains[this.config.settings.chain].chain_id;
-        this.loadActionHandlers();
+        this.actionHandlersReady = this.loadActionHandlers();
     }
 
     async loadParser() {
@@ -95,12 +96,14 @@ export class HyperionModuleLoader {
         }
     }
 
-    loadActionHandlers() {
+    async loadActionHandlers() {
         const actionDataPath = path.join(import.meta.dirname, 'action_data');
-        const files = readdirSync(actionDataPath);
+        const files = ['eosio-newaccount.js', 'eosio-updateauth.js'];
         for (const plugin of files.filter(f => f.endsWith('.js'))) {
-            import(join(actionDataPath, plugin)).then(value => {
-                const _module = value.hyperionModule;
+                const value = await import(join(actionDataPath, plugin));
+                const _module = { ...value.hyperionModule };
+                if (_module.contract === 'eosio') _module.contract = this.config.settings.eosio_alias;
+                _module.parser_version = ['wire'];
                 if (_module.parser_version.includes(this.config.settings.parser)) {
                     if (_module.chain === this.chainID || _module.chain === '*') {
                         const key = `${_module.contract}::${_module.action}`;
@@ -115,14 +118,12 @@ export class HyperionModuleLoader {
                         }
                     }
                 }
-            }).catch(reason => {
-                console.log(`Error loading action module: ${reason}`);
-            });
         }
     }
 
     async init() {
         try {
+            await this.actionHandlersReady;
             await this.loadParser();
             await this.loadPlugins();
         } catch (e) {

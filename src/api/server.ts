@@ -299,6 +299,7 @@ class HyperionApiServer {
         try {
           const chain_data = await rpc.v1.chain.get_info();
           if (chain_data && chain_data.chain_id) {
+            if (chain_data.chain_id.toString().toLowerCase() !== this.manager.conn.chains[this.chain].chain_id.toLowerCase()) throw new Error('Wire RPC chain identity does not match configuration');
             this.pluginParams.chain_id = chain_data.chain_id;
             return true;
           } else {

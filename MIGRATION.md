@@ -48,7 +48,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 5 | Complete | Negotiate advertised Wire v0/v1 requests/status/results, stage ranges until verified status and re-negotiate on reconnect. Decode packed receipts/CPU arrays without invented legacy status/net/schedule fields. Reader decode failures no longer acknowledge lost payloads. |
 | 6 | Conservative | Decode actions only from proven historical ABI intervals; remove head/previous-block guesses, preserve raw ABI/checksums and raw undecodable actions. Keep upstream inline/notification deduplication and exact sequence strings. Same-block ABI timeline reconstruction remains a promotion gate. |
 | 7 | Complete | Preserve full raw KV key/value/table identity; hash full namespace/fork/deletion identity into bounded document IDs. Decode values only with proven historical ABIs, retain deletions and ignore secondary-index bookkeeping as duplicate business rows. No guessed scope/composite projection or generic current-state KV service. |
-| 8 | Planned | Configure bounded, chain-scoped read APIs with explicit compatibility/deprecation responses. |
+| 8 | Complete | Select the Wire parser/system contract, isolate queues/indices/cache/databases by lossless chain-derived namespace, reject mismatched RPC identity, retain bounded history and return explicit HTTP 410 for retired state/statistics/proxy capabilities. |
 | 9 | Planned | Retire obsolete specialized chain features without deleting generic governance history. |
 | 10 | Planned | Remove replaced codecs and integrations only after retained callers pass. |
 | 11 | Planned | Expose truthful coverage, lag and indexing failures through compatible health fields. |
@@ -81,6 +81,24 @@ explicit HTTP 410 response identifying the capability, reason and supported
 replacement where one exists. Do not return HTTP 200 with fabricated empty data.
 Deprecated CLI options/commands must fail explicitly before side effects. Generic
 action history remains available even when a specialized legacy view is removed.
+
+### Runtime configuration
+
+Use `settings.parser: "wire"`, `system_contract: "sysio"` and a new
+`index_version: "wire-v1"`; do not reuse an existing index mapping. Connection
+labels and `api.chain_name` remain operator-owned display/configuration choices.
+Runtime storage identity is `w` plus the 32-byte chain ID losslessly encoded as
+50 lowercase base-36 digits. This fits Elasticsearch naming and MongoDB's
+63-byte database-name limit without truncating chain identity. Keep the MongoDB
+database prefix short. Redis receives the same namespace as its key prefix.
+Reusing a human label after a respin therefore selects new storage, not old data.
+
+The read API retains health, action/transaction/account-creation/ABI/block/delta
+history, v1 history compatibility and the narrow RPC read allowlist in
+`WireRoutes.ts`. State summaries, token/voter/table projections, legacy
+schedule/statistics/trace/stream APIs and transaction-forwarding routes return
+410 with a replacement. SDK/Hub native account reads remain authoritative.
+No live service, public endpoint or consumer configuration was changed.
 
 ## Validation and promotion gates
 

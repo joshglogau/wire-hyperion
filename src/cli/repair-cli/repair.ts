@@ -99,7 +99,7 @@ export async function repairChain(chain: string, file: string, args: any) {
     }
 
     const forkedBlocks = JSON.parse(readFileSync(file).toString());
-    const blockIndex = `${chain}-block-${chainConfig.settings.index_version}`;
+    const blockIndex = `${chainConfig.settings.chain}-block-${chainConfig.settings.index_version}`;
     let deleteBlocks = 0;
     let deleteActions = 0;
     let deleteDeltas = 0;
@@ -113,7 +113,7 @@ export async function repairChain(chain: string, file: string, args: any) {
     for (const range of forkedBlocks) {
         // ACTIONS
         const searchActions: any = {
-            index: `${chain}-action-${chainConfig.settings.index_version}-*`,
+            index: `${chainConfig.settings.chain}-action-${chainConfig.settings.index_version}-*`,
             size: 0,
             track_total_hits: true,
             query: {
@@ -168,7 +168,7 @@ export async function repairChain(chain: string, file: string, args: any) {
 
         // DELTAS
         const searchDeltas: any = {
-            index: `${chain}-delta-${chainConfig.settings.index_version}-*`,
+            index: `${chainConfig.settings.chain}-delta-${chainConfig.settings.index_version}-*`,
             size: 0,
             track_total_hits: true,
             query: {
@@ -222,7 +222,7 @@ export async function repairChain(chain: string, file: string, args: any) {
 
         // ABIS
         const searchAbis: any = {
-            index: `${chain}-abi-${chainConfig.settings.index_version}`,
+            index: `${chainConfig.settings.chain}-abi-${chainConfig.settings.index_version}`,
             size: 0,
             track_total_hits: true,
             query: {
@@ -274,7 +274,7 @@ export async function repairChain(chain: string, file: string, args: any) {
 
         // ACCOUNTS
         const searchAccounts: any = {
-            index: `${chain}-table-accounts-${chainConfig.settings.index_version}`,
+            index: `${chainConfig.settings.chain}-table-accounts-${chainConfig.settings.index_version}`,
             size: 0,
             track_total_hits: true,
             query: {
@@ -336,7 +336,7 @@ export async function repairChain(chain: string, file: string, args: any) {
 
         // VOTERS
         const searchVoters: any = {
-            index: `${chain}-table-voters-${chainConfig.settings.index_version}`,
+            index: `${chainConfig.settings.chain}-table-voters-${chainConfig.settings.index_version}`,
             size: 0,
             track_total_hits: true,
             query: {
@@ -398,7 +398,7 @@ export async function repairChain(chain: string, file: string, args: any) {
 
         // PROPOSALS
         const searchProposals: any = {
-            index: `${chain}-table-proposals-${chainConfig.settings.index_version}`,
+            index: `${chainConfig.settings.chain}-table-proposals-${chainConfig.settings.index_version}`,
             size: 0,
             track_total_hits: true,
             query: {

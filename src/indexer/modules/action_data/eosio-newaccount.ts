@@ -11,7 +11,6 @@ export const hyperionModule = {
             name = data['newact'];
         } else if (data['name']) {
             name = data['name'];
-            delete data['name'];
         }
         if (name) {
             action['@newaccount'] = {

@@ -344,14 +344,14 @@ async function newChain(shortName: string, options) {
             connections.chains[shortName].http = options.http;
             if (info.server_version_string) {
                 if (info.server_version_string.includes('v3')) {
-                    jsonData.settings.parser = '3.2';
+                    jsonData.settings.parser = 'wire';
                 } else if (info.server_version_string.includes('v2.1')) {
-                    jsonData.settings.parser = '2.1';
+                    jsonData.settings.parser = 'wire';
                 } else {
-                    jsonData.settings.parser = '3.2';
+                    jsonData.settings.parser = 'wire';
                 }
             } else {
-                jsonData.settings.parser = '3.2';
+                jsonData.settings.parser = 'wire';
             }
             console.log(`Parser version set to ${jsonData.settings.parser}`);
             console.log(`Chain ID: ${info.chain_id}`);

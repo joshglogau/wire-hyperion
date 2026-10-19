@@ -73,9 +73,10 @@
   "settings": {
     "preview": false,
     "chain": "eos",
-    "parser": "3.2",
+    "parser": "wire",
+    "system_contract": "sysio",
     "auto_stop": 0,
-    "index_version": "v1",
+    "index_version": "wire-v1",
     "debug": false,
     "bp_logs": false,
     "bp_monitoring": false,
@@ -124,9 +125,9 @@
       "deltas": false
     },
     "tables": {
-      "proposals": true,
-      "accounts": true,
-      "voters": true,
+      "proposals": false,
+      "accounts": false,
+      "voters": false,
       "permissions": true,
       "user_resources": false
     },
@@ -136,7 +137,7 @@
     "index_deltas": true,
     "index_transfer_memo": true,
     "index_all_deltas": true,
-    "index_deltas_deletions": false,
+    "index_deltas_deletions": true,
     "deferred_trx": false,
     "failed_trx": false,
     "resource_limits": false,

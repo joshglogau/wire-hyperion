@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import { HyperionConnections } from "../../interfaces/hyperionConnections.js";
 import { HyperionConfig } from "../../interfaces/hyperionConfig.js";
 import { getConfigPath, hLog } from "../helpers/common_functions.js";
+import { configureWireRuntime } from "../../wire/WireConfiguration.js";
 
 export interface Filters {
     action_blacklist: Set<string>;
@@ -36,6 +37,8 @@ export class ConfigurationModule {
         if (!this.config) {
             return;
         }
+        if (this.config.settings.parser !== 'wire') throw new Error('Deprecated parser selection: configure settings.parser=wire for this draft');
+        if (this.connections) configureWireRuntime(this.config, this.connections);
 
         if (this.config.settings.process_prefix) {
             this.proc_prefix = this.config.settings.process_prefix;
@@ -47,11 +50,12 @@ export class ConfigurationModule {
             this.config.indexer.fetch_block = false;
         }
 
-        this.EOSIO_ALIAS = 'eosio';
+        this.EOSIO_ALIAS = 'sysio';
         if (this.config.settings.eosio_alias) {
             this.EOSIO_ALIAS = this.config.settings.eosio_alias;
         } else {
-            this.config.settings.eosio_alias = 'eosio';
+            this.config.settings.eosio_alias = this.config.settings.system_contract ?? 'sysio';
+            this.EOSIO_ALIAS = this.config.settings.eosio_alias;
         }
 
         const normalizeEntryFormat = (entry: string): string => {
@@ -132,6 +136,7 @@ export class ConfigurationModule {
             const data = readFileSync(file).toString();
             try {
                 this.connections = JSON.parse(data);
+                configureWireRuntime(this.config, this.connections);
             } catch (e: any) {
                 console.log(`Failed to Load ${file}`);
                 console.log(e.message);
