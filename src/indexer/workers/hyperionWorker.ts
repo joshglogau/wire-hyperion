@@ -1,6 +1,6 @@
 import { Client } from "@elastic/elasticsearch";
 import { EventEmitter } from "events";
-import { Abieos } from "@eosrio/node-abieos";
+import { WireCodec } from "../../wire/WireCodec.js";
 import { Channel, ConfirmChannel } from "amqplib";
 
 import { HyperionConfig } from "../../interfaces/hyperionConfig.js";
@@ -39,7 +39,7 @@ export abstract class HyperionWorker {
     filters: Filters;
 
     failedAbiMap: Map<string, Set<number>> = new Map();
-    protected abieos = Abieos.getInstance();
+    protected abieos = new WireCodec();
     configModule: ConfigurationModule;
 
     protected constructor() {

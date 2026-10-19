@@ -10,7 +10,8 @@ import { RabbitQueueDef } from "../definitions/index-queues.js";
 import { ActionTrace } from "../../interfaces/action-trace.js";
 import { HyperionWorker } from "./hyperionWorker.js";
 import { HyperionActionAct } from "../../interfaces/hyperion-action.js";
-import { ABI, Action, Serializer } from "@wireio/sdk-core";
+import { ABI, Action } from "@wireio/sdk-core";
+import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { HyperionAbi } from "../../interfaces/hyperion-abi.js";
 import { groupActionTraces } from "../helpers/action-dedup.js";
 

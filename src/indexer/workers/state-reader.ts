@@ -1,7 +1,8 @@
 import WebSocket from 'ws';
 import {cargo, QueueObject} from 'async';
 import {Channel, ConfirmChannel} from 'amqplib';
-import {ABI, API, Bytes, Checksum256, Serializer, UInt32} from '@wireio/sdk-core';
+import {ABI, API, Bytes, Checksum256, UInt32} from '@wireio/sdk-core';
+import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 
 import {HyperionWorker} from './hyperionWorker.js';
 import {debugLog, hLog} from '../helpers/common_functions.js';

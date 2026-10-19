@@ -1,7 +1,7 @@
 import {debugLog, hLog} from "../helpers/common_functions.js";
 import WebSocket from 'ws';
-import {Abieos} from "@eosrio/node-abieos";
-import {ABI, Bytes, Serializer} from "@wireio/sdk-core";
+import {ABI, Bytes} from "@wireio/sdk-core";
+import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 
 export interface ShipServer {
     node: LabelledShipNode;
@@ -186,7 +186,6 @@ export class StateHistorySocket {
     private async testShipServer(server: ShipServer) {
         await new Promise<void>((resolve) => {
             let protocolAbi: ABI | undefined = undefined;
-            const abieos = Abieos.getInstance();
             const timeout = setTimeout(() => {
                 server.active = false;
                 hLog(`Testing SHIP Server ${server.node.url} :: Timeout after 5s`);
@@ -198,7 +197,6 @@ export class StateHistorySocket {
             tempWS.on('message', (data: Buffer) => {
                 if (!protocolAbi) {
                     const abiString = data.toString();
-                    abieos.loadAbi('0', abiString);
                     protocolAbi = ABI.from(abiString);
                     tempWS.send(
                         Serializer.encode({
