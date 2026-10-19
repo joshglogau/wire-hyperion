@@ -16,6 +16,8 @@ import { estypes } from "@elastic/elasticsearch";
 import { ABI, Action, PackedTransaction } from "@wireio/sdk-core";
 import { WireSerializer as Serializer } from "../../wire/WireSerializer.js";
 import { receiptCpuUsage, unpackReceiptTransaction } from "../../wire/WireShip.js";
+import { historicalAbiAtBlock } from "../../wire/HistoricalAbi.js";
+import { decodeWireKvRow, type WireKvRow } from "../../wire/WireKv.js";
 import { TokenAccount } from "../../interfaces/custom-ds.js";
 import { GetBlocksResultV0 } from "./state-reader.js";
 import { de } from "zod/v4/locales";
@@ -1175,6 +1177,21 @@ export default class MainDSWorker extends HyperionWorker {
     }
 
     deltaStructHandlers = {
+
+        "contract_row_kv": async (payload: WireKvRow, block_num: number, block_ts: string, row: { present: number | boolean }, block_id: string) => {
+            if (this.conf.indexer.abi_scan_mode || this.conf.indexer.disable_indexing || !this.conf.features.index_deltas) return;
+            const present = row.present === 1 || row.present === true;
+            if (!present && !this.conf.features.index_deltas_deletions) return;
+            const snapshot = await this.fetchAbiHexAtBlockElastic(payload.code, block_num, true);
+            const decoded = decodeWireKvRow(payload, present, historicalAbiAtBlock(snapshot, block_num));
+            const document = { ...decoded, present: Number(present), block_num, block_id, "@timestamp": block_ts };
+            if (this.checkDeltaBlacklist(document) || (this.filters.delta_whitelist.size && !this.checkDeltaWhitelist(document))) return;
+            if (decoded.ds_error) process.send?.({ event: "ds_error", data: { type: "delta_ds_error", block: block_num, code: payload.code, table_id: payload.table_id, message: "KV value retained raw: missing/ambiguous ABI or undecodable value" } });
+            await this.pushToDeltaQueue(bufferFromJson(document), block_num);
+        },
+
+        // Secondary-index maintenance is not another business-row history entry.
+        "contract_index_kv": async () => false,
 
         "contract_row": async (payload: any, block_num: number, block_ts: string, row: any, block_id: string) => {
 

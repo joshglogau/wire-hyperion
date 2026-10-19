@@ -4,6 +4,7 @@ import _ from "lodash";
 import {hLog} from "./common_functions.js";
 import {createHash} from "crypto";
 import {Client, estypes} from "@elastic/elasticsearch";
+import { deltaDocumentId } from "../../wire/WireKv.js";
 
 type MaxBlockCb = (maxBlock: number) => void;
 type PartitionRoutingFunction = (blockNum: number) => string;
@@ -91,7 +92,7 @@ function buildDeltaBulk(payloads: Message[],
         if (maxBlock < body.block_num) {
             maxBlock = body.block_num;
         }
-        const id = `${body.block_num}-${body.code}-${body.scope}-${body.table}-${body.primary_key}`;
+        const id = deltaDocumentId(body);
         messageMap.set(id, _.omit(payload, ['content']));
         return [
             {

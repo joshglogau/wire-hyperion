@@ -4,6 +4,8 @@ export interface HyperionDelta {
 	scope: string;
 	table: string;
 	primary_key: string;
+	table_id?: number;
+	raw_key?: string;
 	payer: string;
 	present: boolean | number;
 	block_num: number;

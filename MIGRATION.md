@@ -47,7 +47,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 4 | Complete | Add SDK public-extension codecs for full 96-byte FC ED signatures and bitsets; use SDK EC/WA/BLS formats and reject truncated/trailing payloads. Replace native decode instances with isolated SDK ABI contexts, without changing SDK wallet/signing behavior. |
 | 5 | Complete | Negotiate advertised Wire v0/v1 requests/status/results, stage ranges until verified status and re-negotiate on reconnect. Decode packed receipts/CPU arrays without invented legacy status/net/schedule fields. Reader decode failures no longer acknowledge lost payloads. |
 | 6 | Conservative | Decode actions only from proven historical ABI intervals; remove head/previous-block guesses, preserve raw ABI/checksums and raw undecodable actions. Keep upstream inline/notification deduplication and exact sequence strings. Same-block ABI timeline reconstruction remains a promotion gate. |
-| 7 | Planned | Handle Wire KV delta identities, deletions and composite keys correctly. |
+| 7 | Complete | Preserve full raw KV key/value/table identity; hash full namespace/fork/deletion identity into bounded document IDs. Decode values only with proven historical ABIs, retain deletions and ignore secondary-index bookkeeping as duplicate business rows. No guessed scope/composite projection or generic current-state KV service. |
 | 8 | Planned | Configure bounded, chain-scoped read APIs with explicit compatibility/deprecation responses. |
 | 9 | Planned | Retire obsolete specialized chain features without deleting generic governance history. |
 | 10 | Planned | Remove replaced codecs and integrations only after retained callers pass. |
