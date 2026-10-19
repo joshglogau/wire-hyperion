@@ -1,3 +1,14 @@
+> **Experimental Wire Network draft — not production-ready.** This branch adapts
+> EOS Rio's Hyperion v4.1.0 for Wire account/transaction history. Hyperion remains
+> the work of EOS Rio / Rio Blocks and its contributors; Wire-specific changes
+> do not imply upstream endorsement or ownership of the original project.
+>
+> See [the migration log and implementation gates](MIGRATION.md) for exactly what
+> changed, why, validation performed and remaining limitations. The upstream
+> documentation below describes Hyperion generally, not certification of this fork.
+> The original [license](license.md) is retained unchanged; its conflict with
+> upstream package metadata must be resolved before a production release.
+
 <!--suppress HtmlUnknownTarget, HtmlDeprecatedAttribute -->
 <br></br>
 <p align="center">

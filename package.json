@@ -1,10 +1,12 @@
 {
   "name": "hyperion-history",
-  "version": "4.1.0",
-  "description": "Scalable Full History API Solution for Antelope based blockchains",
+  "version": "4.1.1-wire.0",
+  "private": true,
+  "description": "Experimental Wire Network compatibility fork of EOS Rio Hyperion history",
   "main": "./build/indexer/launcher.js",
   "scripts": {
     "tsc": "tsc",
+    "typecheck": "tsc --noEmit",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "postinstall": "npm run build && npm run fix-permissions",
@@ -23,7 +25,7 @@
     "type": "git",
     "url": "https://github.com/eosrio/hyperion-history-api.git"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN license.md",
   "dependencies": {
     "@elastic/elasticsearch": "8.19.1",
     "@eosrio/hyperion-plugin-core": "^0.1.0",
@@ -40,6 +42,8 @@
     "@fastify/swagger-ui": "5.2.6",
     "@socket.io/redis-adapter": "8.3.0",
     "@wharfkit/antelope": "1.2.0",
+    "@wireio/sdk-core": "1.0.102",
+    "@wireio/shared": "1.0.102",
     "amqplib": "2.0.1",
     "async": "3.2.6",
     "cli-progress": "3.12.0",
