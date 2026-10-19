@@ -49,7 +49,7 @@ This ledger records completed work rather than implying planned work has shipped
 | 6 | Conservative | Decode actions only from proven historical ABI intervals; remove head/previous-block guesses, preserve raw ABI/checksums and raw undecodable actions. Keep upstream inline/notification deduplication and exact sequence strings. Same-block ABI timeline reconstruction remains a promotion gate. |
 | 7 | Complete | Preserve full raw KV key/value/table identity; hash full namespace/fork/deletion identity into bounded document IDs. Decode values only with proven historical ABIs, retain deletions and ignore secondary-index bookkeeping as duplicate business rows. No guessed scope/composite projection or generic current-state KV service. |
 | 8 | Complete | Select the Wire parser/system contract, isolate queues/indices/cache/databases by lossless chain-derived namespace, reject mismatched RPC identity, retain bounded history and return explicit HTTP 410 for retired state/statistics/proxy capabilities. |
-| 9 | Planned | Retire obsolete specialized chain features without deleting generic governance history. |
+| 9 | Bounded | Replace legacy action enrichers, DSP console-event parser, state-route bodies and unsupported synchronizers with explicit deprecation stubs. Preserve account/multisig table handling and unproven backend consumers; broader table removal/startup feature rejection was not accepted by safety review and is deferred for explicit owner review. |
 | 10 | Planned | Remove replaced codecs and integrations only after retained callers pass. |
 | 11 | Planned | Expose truthful coverage, lag and indexing failures through compatible health fields. |
 | 12 | Planned | Record reproducible validation and operational/release gates. |
@@ -81,6 +81,19 @@ explicit HTTP 410 response identifying the capability, reason and supported
 replacement where one exists. Do not return HTTP 200 with fabricated empty data.
 Deprecated CLI options/commands must fail explicitly before side effects. Generic
 action history remains available even when a specialized legacy view is removed.
+
+Retired enrichers: RAM/bandwidth/REX, obsolete DPoS voter/proxy, FIO-specific
+rewards and float-valued transfer projections. Transfer data remains exact in
+`act.data`; it is not converted into a floating-point balance view. The account
+creation and permission enrichers remain. Generic multisig/council actions remain
+history regardless of whether a specialized state API is offered.
+
+Old account/voter/proposal/custom-state synchronizer constructors now fail with
+`DeprecatedFeatureError` before reading files, pausing the indexer or touching
+databases. The permission synchronizer remains and uses chain-scoped storage.
+The existing account/multisig table handlers and other unproven backend consumers
+are retained rather than removed wholesale. Experimental reference defaults keep
+legacy state projections off; they are not verified current Wire KV state views.
 
 ### Runtime configuration
 

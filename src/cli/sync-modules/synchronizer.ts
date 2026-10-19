@@ -4,6 +4,7 @@ import {readFileSync} from "fs";
 import {Collection, MongoClient, Document as MongoDoc} from "mongodb";
 import {join} from "path";
 import {HyperionConnections} from "../../interfaces/hyperionConnections.js";
+import { wireNamespace } from "../../wire/WireConfiguration.js";
 
 export abstract class Synchronizer<T extends MongoDoc> {
     protected chain: string;
@@ -17,9 +18,11 @@ export abstract class Synchronizer<T extends MongoDoc> {
     protected totalItems: number = 0;
 
     protected constructor(chain: string, collectionType: string) {
-        this.chain = chain;
-        this.indexName = `${chain}-table-${collectionType}-v1`;
         this.connections = this.loadConnections();
+        const selected = this.connections.chains[chain];
+        this.chain = wireNamespace(selected?.chain_id ?? "");
+        this.connections.chains[this.chain] = selected;
+        this.indexName = `${this.chain}-table-${collectionType}-wire-v1`;
         this.elastic = this.createElasticClient();
         this.client = this.createAPIClient();
     }

@@ -1,24 +1,8 @@
-import DSPoolWorker from "../../workers/ds-pool.js";
-import flatstr from 'flatstr';
+import type DSPoolWorker from "../../workers/ds-pool.js";
+import type { ActionTrace } from "../../../interfaces/action-trace.js";
+import { deprecatedFeature } from "../../../wire/Deprecation.js";
 
-export async function parseDSPEvent(worker: DSPoolWorker, data: any) {
-    const parsedEvents: any[] = [];
-    const events = data.console.split("\n");
-    for (const event of events) {
-        if (event !== '') {
-            try {
-                parsedEvents.push(JSON.parse(event));
-            } catch (e) {
-            }
-        }
-    }
-    delete data.console;
-    if (parsedEvents.length > 0) {
-        const payload = {
-            ...data,
-            dsp_events: parsedEvents
-        }
-        console.log(payload);
-        worker.ch?.sendToQueue(`${worker.chain}:dsp`, Buffer.from(flatstr(JSON.stringify(payload))));
-    }
+/** @deprecated DSP console-event parsing is not Wire action history. */
+export async function parseDSPEvent(_worker: DSPoolWorker, _data: ActionTrace): Promise<void> {
+    deprecatedFeature("DSP/LiquidApps console-event parsing");
 }

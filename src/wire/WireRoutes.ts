@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 const HISTORY_METHODS = new Set(["GET", "POST", "HEAD"]);
 const READ_CHAIN_PATHS = new Set(["get_info", "get_block", "get_account", "get_abi", "get_raw_abi"]);
@@ -8,6 +8,14 @@ const DEPRECATED_HISTORY = new Set(["get_schedule", "get_table_state", "export_a
 /** Explicit retirement result, never an empty successful response. */
 export function deprecatedResponse(capability: string, replacement: string) {
     return { statusCode: 410, error: "DeprecatedFeature", capability, message: "This capability is deprecated in the experimental Wire history fork.", replacement };
+}
+
+/** Shared stub for old route modules, including imports outside normal routing. */
+export function deprecatedRouteFactory(capability: string) {
+    return (_server: FastifyInstance, _route: string) => async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+        const response = deprecatedResponse(capability, "Use generic Wire history or live Wire RPC / SDK Core");
+        reply.code(response.statusCode).send(response);
+    };
 }
 
 /** Classify removed upstream routes and prevent history from forwarding writes. */
