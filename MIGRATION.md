@@ -42,7 +42,7 @@ This ledger records completed work rather than implying planned work has shipped
 | Step | Status | Change and reason |
 |---|---|---|
 | 1 | Complete | Preserve upstream attribution/license, mark draft version/private package, seed exact SDK/shared dependency pins, add contributor guidance and CI coverage for `next`. |
-| 2 | Planned | Establish source-derived SHIP and action-history fixtures before changing decoders. |
+| 2 | Complete | Mechanically extract the producer SHIP ABI as a provenance-linked fixture; guard finality, receipt and KV schema differences before adapting decoders. |
 | 3 | Planned | Integrate the published SDK Core at existing RPC and ABI seams. |
 | 4 | Planned | Prove Wire timestamps, EC/ED/BLS and SHIP primitive layouts without changing wallet signing. |
 | 5 | Planned | Support current Wire SHIP variants, blocks and receipt layouts. |
